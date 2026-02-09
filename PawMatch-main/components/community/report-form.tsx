@@ -46,14 +46,14 @@ export function CommunityReportForm() {
         // headers: { 'Content-Type': 'application/json' }, // Remove content-type header for FormData
         body: data
       })
-      const data = await response.json()
+      const responseData = await response.json()
 
-      if (data.success) {
+      if (responseData.success) {
         toast.success("Report submitted successfully! Thank you for helping.")
 
         // Save to my reports
         const myReports = JSON.parse(localStorage.getItem('pawmatch_my_reports') || '[]')
-        myReports.push(data.reportId)
+        myReports.push(responseData.reportId)
         localStorage.setItem('pawmatch_my_reports', JSON.stringify(myReports))
 
         setFormData({
