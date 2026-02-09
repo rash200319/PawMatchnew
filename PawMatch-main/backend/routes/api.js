@@ -56,10 +56,10 @@ router.post('/alerts/test', async (req, res) => {
 
 // Pet Routes
 const petController = require('../controllers/petController');
-router.post('/pets', petController.uploadMiddleware, petController.addPet);
+router.post('/pets', auth, petController.uploadMiddleware, petController.addPet);
 router.get('/pets', petController.getAllPets);
 router.get('/pets/:id', petController.getPetById);
-router.put('/pets/:id', petController.uploadMiddleware, petController.updatePet);
+router.put('/pets/:id', auth, petController.uploadMiddleware, petController.updatePet);
 
 // Demo Routes
 const demoController = require('../controllers/demoController');

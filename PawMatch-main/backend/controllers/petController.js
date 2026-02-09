@@ -65,7 +65,7 @@ exports.addPet = async (req, res) => {
         const values = [
             name, type, breed, age, gender, size, energy_level,
             temperamentStr, socialStr, livingStr,
-            imageUrl, description, shelter_id || 1,
+            imageUrl, description, req.user?.id || shelter_id || 1,
             weight,
             is_vaccinated === 'true' || is_vaccinated === true ? 1 : 0,
             is_neutered === 'true' || is_neutered === true ? 1 : 0,
@@ -98,7 +98,7 @@ exports.getAllPets = async (req, res) => {
     try {
         const { status, is_foster } = req.query;
         // Default to available if no status specified to ensure new pets show up for users
-        let query = 'SELECT p.*, s.shelter_name FROM pets p LEFT JOIN users s ON p.shelter_id = s.id WHERE 1=1';
+        let query = 'SELECT p.*, s.organization_name as shelter_name FROM pets p LEFT JOIN shelters s ON p.shelter_id = s.user_id WHERE 1=1';
         const params = [];
 
         if (status) {
@@ -135,10 +135,15 @@ exports.getPetById = async (req, res) => {
     try {
         const { id } = req.params;
         console.log(`Fetching pet with ID: ${id}`);
+        // Join with shelters for organization name and contact, join with users for email.
         const query = `
-            SELECT p.*, s.shelter_name, s.email as shelter_email, s.phone_number as shelter_phone
+            SELECT p.*, 
+                   sh.organization_name as shelter_name, 
+                   u.email as shelter_email, 
+                   sh.contact_number as shelter_phone
             FROM pets p
-            LEFT JOIN users s ON p.shelter_id = s.id
+            LEFT JOIN shelters sh ON p.shelter_id = sh.user_id
+            LEFT JOIN users u ON p.shelter_id = u.id
             WHERE p.id = ?
         `;
         const pets = await db.query(query, [id]);
@@ -219,7 +224,7 @@ exports.updatePet = async (req, res) => {
                 living_situation_match = ?, image_url = ?, description = ?,
                 weight = ?, is_vaccinated = ?, is_neutered = ?, 
                 is_microchipped = ?, is_health_checked = ?, is_foster = ?, status = ?
-            WHERE id = ?
+            WHERE id = ? AND shelter_id = ?
         `;
 
         const values = [
@@ -235,7 +240,8 @@ exports.updatePet = async (req, res) => {
             is_health_checked === 'true' || is_health_checked === true || is_health_checked === 1 ? 1 : 0,
             is_foster === 'true' || is_foster === true || is_foster === 1 ? 1 : 0,
             status || 'available',
-            id
+            id,
+            req.user.id
         ];
 
         await db.query(query, values);
