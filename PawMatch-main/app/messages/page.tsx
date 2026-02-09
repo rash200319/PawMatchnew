@@ -31,7 +31,7 @@ export default function UserMessagesPage() {
 
     const fetchMessages = async () => {
         try {
-            const res = await fetch("http://localhost:5000/api/user/messages", {
+            const res = await fetch("/api/user/messages", {
                 headers: {
                     "Authorization": `Bearer ${token}`
                 }
@@ -40,7 +40,7 @@ export default function UserMessagesPage() {
             if (data.success) {
                 setMessages(data.messages)
                 // Mark notifications as read
-                fetch("http://localhost:5000/api/notifications/read", {
+                fetch("/api/notifications/read", {
                     method: 'PUT',
                     headers: {
                         "Content-Type": "application/json",

@@ -45,7 +45,7 @@ export function VerifyShelterCard({ status, userId, onVerificationSubmitted }: V
             data.append('document', file)
 
             const token = sessionStorage.getItem('token');
-            const res = await fetch('http://localhost:5000/api/shelters/verify-request', {
+            const res = await fetch('/api/shelters/verify-request', {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`

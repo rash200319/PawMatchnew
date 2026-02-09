@@ -94,7 +94,7 @@ export function EditPetDialog({ pet, isOpen, onClose, onUpdate }: EditPetDialogP
                 data.append('image', imageFile)
             }
 
-            const res = await fetch(`http://localhost:5000/api/pets/${pet.id}`, {
+            const res = await fetch(`/api/pets/${pet.id}`, {
                 method: 'PUT',
                 body: data,
             })

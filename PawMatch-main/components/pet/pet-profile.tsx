@@ -57,7 +57,7 @@ export function PetProfile({ id }: PetProfileProps) {
   useEffect(() => {
     const fetchPet = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/pets/${id}`)
+        const res = await fetch(`/api/pets/${id}`)
         const data = await res.json()
         if (data.success) {
           setPet(data.pet)
@@ -83,7 +83,7 @@ export function PetProfile({ id }: PetProfileProps) {
     const checkApplicationStatus = async () => {
       if (!user || !pet) return
       try {
-        const res = await fetch("http://localhost:5000/api/adoptions/me", {
+        const res = await fetch("/api/adoptions/me", {
           headers: { "x-auth-token": token || "" }
         })
         const data = await res.json()
@@ -105,7 +105,7 @@ export function PetProfile({ id }: PetProfileProps) {
 
     setIsAdopting(true)
     try {
-      const res = await fetch("http://localhost:5000/api/adopt", {
+      const res = await fetch("/api/adopt", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -145,7 +145,7 @@ export function PetProfile({ id }: PetProfileProps) {
 
     setIsScheduling(true)
     try {
-      const res = await fetch("http://localhost:5000/api/visits", {
+      const res = await fetch("/api/visits", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -185,7 +185,7 @@ export function PetProfile({ id }: PetProfileProps) {
 
     setIsSendingMessage(true)
     try {
-      const res = await fetch("http://localhost:5000/api/shelter/message", {
+      const res = await fetch("/api/shelter/message", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

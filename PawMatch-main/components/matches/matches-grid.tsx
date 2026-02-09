@@ -122,8 +122,7 @@ export function MatchesGrid() {
     const fetchMatches = async () => {
       try {
         // Always fetch all available pets from the database
-        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-        const res = await fetch(`${API_URL}/api/pets?status=available`)
+        const res = await fetch('/api/pets?status=available')
         const data = await res.json()
 
         if (!data.success) {

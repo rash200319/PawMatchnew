@@ -25,8 +25,7 @@ export function VerifyForm() {
         setMessage("")
         setError("")
         try {
-            const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-            const res = await fetch(`${API_URL}/api/resend-otp`, {
+            const res = await fetch("/api/resend-otp", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email }),
@@ -50,8 +49,7 @@ export function VerifyForm() {
         setMessage("")
 
         try {
-            const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-            const res = await fetch(`${API_URL}/api/verify`, {
+            const res = await fetch("/api/verify", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email, otp }),

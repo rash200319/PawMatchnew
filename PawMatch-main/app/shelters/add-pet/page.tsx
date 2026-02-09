@@ -107,7 +107,7 @@ export default function AddPetPage() {
                 data.append('shelter_id', user.id.toString())
             }
 
-            const res = await fetch('http://localhost:5000/api/pets', {
+            const res = await fetch('/api/pets', {
                 method: 'POST',
                 headers: {
                     'x-auth-token': token || ''

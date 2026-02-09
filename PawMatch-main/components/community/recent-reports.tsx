@@ -13,7 +13,7 @@ export function RecentReports() {
 
   const fetchReports = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/reports')
+      const res = await fetch('/api/reports')
       const data = await res.json()
       if (data.success) {
         setReports(data.reports)
@@ -41,7 +41,7 @@ export function RecentReports() {
     if (!confirm("Are you sure you want to cancel this report?")) return
 
     try {
-      const res = await fetch(`http://localhost:5000/api/reports/${id}`, {
+      const res = await fetch(`/api/reports/${id}`, {
         method: 'DELETE'
       })
       const data = await res.json()

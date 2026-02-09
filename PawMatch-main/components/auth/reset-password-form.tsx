@@ -55,8 +55,7 @@ export function ResetPasswordForm() {
         setError("")
 
         try {
-            const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-            const res = await fetch(`${API_URL}/api/reset-password`, {
+            const res = await fetch("/api/reset-password", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email, token, newPassword: password }),

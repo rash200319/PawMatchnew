@@ -154,7 +154,7 @@ export function QuizFlow() {
   const submitQuiz = async () => {
     setIsSubmitting(true)
     try {
-      const response = await fetch('http://localhost:5000/api/match', {
+      const response = await fetch('/api/match', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ answers, userId: user?.id })

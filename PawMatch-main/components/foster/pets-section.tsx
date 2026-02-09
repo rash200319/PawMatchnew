@@ -49,7 +49,7 @@ export function FosterPetsSection() {
   useEffect(() => {
     const fetchFosterPets = async () => {
       try {
-        const res = await fetch('http://localhost:5000/api/pets?is_foster=true&status=available')
+        const res = await fetch('/api/pets?is_foster=true&status=available')
         const data = await res.json()
         if (data.success) {
           setPets(data.pets)

@@ -32,7 +32,7 @@ export default function ShelterProfilePage() {
     useEffect(() => {
         const fetchShelter = async () => {
             try {
-                const res = await fetch(`http://localhost:5000/api/shelter/public/${id}`)
+                const res = await fetch(`/api/shelter/public/${id}`)
                 const data = await res.json()
                 if (data.success) {
                     setShelter(data.shelter)

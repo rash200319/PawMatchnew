@@ -54,7 +54,7 @@ export default function ShelterAnalyticsPage({ params }: { params: Promise<{ id:
 
         const fetchAnalytics = async () => {
             try {
-                const res = await fetch(`http://localhost:5000/api/admin/analytics/shelter/${id}`, {
+                const res = await fetch(`/api/admin/analytics/shelter/${id}`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
@@ -228,7 +228,7 @@ export default function ShelterAnalyticsPage({ params }: { params: Promise<{ id:
                                         ))}
                                     </Pie>
                                     <Tooltip formatter={(value: number) => [`${value} Pets`, 'Count']} />
-                                    <Legend formatter={(value) => value.split('_').map((s: string) => s.charAt(0).toUpperCase() + s.slice(1)).join(' ')} />
+                                    <Legend formatter={(value: string) => value.split('_').map((s: string) => s.charAt(0).toUpperCase() + s.slice(1)).join(' ')} />
                                 </PieChart>
                             </ResponsiveContainer>
                         ) : (

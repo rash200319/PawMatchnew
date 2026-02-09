@@ -83,7 +83,7 @@ export function WelfareDashboard() {
   const fetchUserAdoptions = async () => {
     if (!user || !token) return
     try {
-      const res = await fetch('http://localhost:5000/api/adoptions/me', {
+      const res = await fetch('/api/adoptions/me', {
         headers: { 'x-auth-token': token }
       })
       const data = await res.json()
@@ -91,7 +91,7 @@ export function WelfareDashboard() {
         setAdoptions(data.adoptions)
         setSelectedAdoptionId(data.adoptions[0].id)
         // Mark application notifications as read
-        fetch("http://localhost:5000/api/notifications/read", {
+        fetch("/api/notifications/read", {
           method: 'PUT',
           headers: {
             "Content-Type": "application/json",
@@ -114,7 +114,7 @@ export function WelfareDashboard() {
   const fetchDashboard = async (id: number) => {
     if (!token) return
     try {
-      const res = await fetch(`http://localhost:5000/api/welfare/${id}`, {
+      const res = await fetch(`/api/welfare/${id}`, {
         headers: { 'x-auth-token': token }
       })
       if (!res.ok) throw new Error("Failed to fetch")
@@ -146,7 +146,7 @@ export function WelfareDashboard() {
 
     setIsSubmittingLog(true)
     try {
-      const res = await fetch(`http://localhost:5000/api/welfare/${selectedAdoptionId}/log`, {
+      const res = await fetch(`/api/welfare/${selectedAdoptionId}/log`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -195,7 +195,7 @@ export function WelfareDashboard() {
 
     setIsSendingContact(true)
     try {
-      const res = await fetch('http://localhost:5000/api/shelter/message', {
+      const res = await fetch('/api/shelter/message', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

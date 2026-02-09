@@ -136,7 +136,7 @@ export function ProfilePage() {
 
         setIsUpdating(true)
         try {
-            const res = await fetch("http://localhost:5000/api/profile", {
+            const res = await fetch("/api/profile", {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
@@ -166,7 +166,7 @@ export function ProfilePage() {
         if (!token) return
         setIsLoadingLogs(true)
         try {
-            const res = await fetch("http://localhost:5000/api/logs", {
+            const res = await fetch("/api/logs", {
                 headers: { "x-auth-token": token }
             })
             const data = await res.json()
@@ -184,7 +184,7 @@ export function ProfilePage() {
         if (!token) return
         setIsLoadingVisits(true)
         try {
-            const res = await fetch("http://localhost:5000/api/visits", {
+            const res = await fetch("/api/visits", {
                 headers: { "x-auth-token": token }
             })
             const data = await res.json()
@@ -202,7 +202,7 @@ export function ProfilePage() {
         if (!token) return
         setIsLoadingAchievements(true)
         try {
-            const res = await fetch("http://localhost:5000/api/achievements", {
+            const res = await fetch("/api/achievements", {
                 headers: { "x-auth-token": token }
             })
             const data = await res.json()
@@ -219,7 +219,7 @@ export function ProfilePage() {
     const fetchUserData = async () => {
         if (!token) return
         try {
-            const res = await fetch("http://localhost:5000/api/adoptions/me", {
+            const res = await fetch("/api/adoptions/me", {
                 headers: { "x-auth-token": token }
             })
             const data = await res.json()
@@ -260,7 +260,7 @@ export function ProfilePage() {
         if (!token || !editingVisit) return
 
         try {
-            const res = await fetch(`http://localhost:5000/api/visits/${editingVisit.id}`, {
+            const res = await fetch(`/api/visits/${editingVisit.id}`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
@@ -285,7 +285,7 @@ export function ProfilePage() {
         if (!token || !confirm("Are you sure you want to cancel this visit?")) return
 
         try {
-            const res = await fetch(`http://localhost:5000/api/visits/${visitId}`, {
+            const res = await fetch(`/api/visits/${visitId}`, {
                 method: "DELETE",
                 headers: { "x-auth-token": token }
             })

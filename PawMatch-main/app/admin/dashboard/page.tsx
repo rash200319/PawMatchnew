@@ -38,11 +38,11 @@ export default function AdminDashboardPage() {
         try {
             const headers = { 'Authorization': `Bearer ${token}` }
             const [sheltersRes, statsRes, allSheltersRes, alertsRes, adoptionsRes] = await Promise.all([
-                fetch('http://localhost:5000/api/admin/pending-shelters', { headers }),
-                fetch('http://localhost:5000/api/admin/stats', { headers }),
-                fetch('http://localhost:5000/api/admin/all-shelters', { headers }),
-                fetch('http://localhost:5000/api/admin/alerts', { headers }),
-                fetch('http://localhost:5000/api/admin/all-adoptions', { headers })
+                fetch('/api/admin/pending-shelters', { headers }),
+                fetch('/api/admin/stats', { headers }),
+                fetch('/api/admin/all-shelters', { headers }),
+                fetch('/api/admin/alerts', { headers }),
+                fetch('/api/admin/all-adoptions', { headers })
             ])
 
             const sheltersData = await sheltersRes.json()
@@ -72,7 +72,7 @@ export default function AdminDashboardPage() {
         if (!selectedShelter) return
 
         try {
-            const res = await fetch('http://localhost:5000/api/admin/verify-shelter', {
+            const res = await fetch('/api/admin/verify-shelter', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -99,7 +99,7 @@ export default function AdminDashboardPage() {
 
     const takeAction = async (reportId: number, action: string, shelterId?: number) => {
         try {
-            const res = await fetch('http://localhost:5000/api/admin/handle-report', {
+            const res = await fetch('/api/admin/handle-report', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -119,7 +119,7 @@ export default function AdminDashboardPage() {
 
     const takeWelfareAction = async (logId: number, status: string, responseText?: string) => {
         try {
-            const res = await fetch('http://localhost:5000/api/admin/handle-welfare', {
+            const res = await fetch('/api/admin/handle-welfare', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

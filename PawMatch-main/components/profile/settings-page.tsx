@@ -48,7 +48,7 @@ export function SettingsPage() {
 
         setIsUpdatingPassword(true)
         try {
-            const res = await fetch("http://localhost:5000/api/update-password", {
+            const res = await fetch("/api/update-password", {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
@@ -85,7 +85,7 @@ export function SettingsPage() {
         }
 
         try {
-            const res = await fetch("http://localhost:5000/api/notifications", {
+            const res = await fetch("/api/notifications", {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
@@ -120,7 +120,7 @@ export function SettingsPage() {
 
         setIsDeleting(true)
         try {
-            const res = await fetch("http://localhost:5000/api/account", {
+            const res = await fetch("/api/account", {
                 method: "DELETE",
                 headers: {
                     "x-auth-token": token,

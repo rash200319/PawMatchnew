@@ -57,7 +57,7 @@ export default function ShelterDashboardPage() {
         try {
             const token = sessionStorage.getItem('token');
             if (!token) return;
-            const res = await fetch('http://localhost:5000/api/shelter/pets', {
+            const res = await fetch('/api/shelter/pets', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const data = await res.json();
@@ -78,7 +78,7 @@ export default function ShelterDashboardPage() {
             try {
                 const token = sessionStorage.getItem('token');
                 if (!token) return;
-                const res = await fetch('http://localhost:5000/api/shelter/messages', {
+                const res = await fetch('/api/shelter/messages', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const data = await res.json();
@@ -94,7 +94,7 @@ export default function ShelterDashboardPage() {
             try {
                 const token = sessionStorage.getItem('token');
                 if (!token) return;
-                const res = await fetch('http://localhost:5000/api/welfare/shelter/alerts', {
+                const res = await fetch('/api/welfare/shelter/alerts', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const data = await res.json();
@@ -125,7 +125,7 @@ export default function ShelterDashboardPage() {
         try {
             const token = sessionStorage.getItem('token');
             if (!token) return;
-            const res = await fetch('http://localhost:5000/api/shelter/applications', {
+            const res = await fetch('/api/shelter/applications', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const data = await res.json();
@@ -142,7 +142,7 @@ export default function ShelterDashboardPage() {
         setIsApproving(adoptionId);
         try {
             const token = sessionStorage.getItem('token');
-            const res = await fetch('http://localhost:5000/api/shelter/approve-adoption', {
+            const res = await fetch('/api/shelter/approve-adoption', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -169,7 +169,7 @@ export default function ShelterDashboardPage() {
         if (!responseText.trim()) return;
         try {
             const token = sessionStorage.getItem('token');
-            const res = await fetch('http://localhost:5000/api/shelter/message/respond', {
+            const res = await fetch('/api/shelter/message/respond', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
