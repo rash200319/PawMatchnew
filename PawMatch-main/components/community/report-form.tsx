@@ -29,10 +29,22 @@ export function CommunityReportForm() {
 
     setIsSubmitting(true)
     try {
+      const data = new FormData()
+      data.append('animalType', formData.animalType)
+      data.append('condition', formData.condition)
+      data.append('location', formData.location)
+      data.append('description', formData.description)
+      data.append('contactName', formData.contactName)
+      data.append('contactPhone', formData.contactPhone)
+
+      formData.images.forEach(image => {
+        data.append('images', image)
+      })
+
       const response = await fetch('/api/reports', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        // headers: { 'Content-Type': 'application/json' }, // Remove content-type header for FormData
+        body: data
       })
       const data = await response.json()
 
@@ -209,10 +221,31 @@ export function CommunityReportForm() {
         {/* Photo Upload */}
         <div>
           <label className="block text-sm font-medium mb-2">Photos (Optional)</label>
-          <div className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-primary/50 transition-colors cursor-pointer">
+          <div className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-primary/50 transition-colors cursor-pointer relative">
+            <input
+              type="file"
+              multiple
+              accept="image/*"
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              onChange={(e) => {
+                if (e.target.files) {
+                  const files = Array.from(e.target.files)
+                  if (files.length > 5) {
+                    toast.error("Max 5 photos allowed")
+                    return
+                  }
+                  setFormData(prev => ({ ...prev, images: files }))
+                  toast.success(`${files.length} photos selected`)
+                }
+              }}
+            />
             <Camera className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-            <p className="text-sm text-muted-foreground mb-1">Click to upload or drag photos here</p>
-            <p className="text-xs text-muted-foreground">Up to 5 photos, max 10MB each</p>
+            <p className="text-sm text-muted-foreground mb-1">
+              {formData.images.length > 0
+                ? `${formData.images.length} photos selected`
+                : "Click to upload or drag photos here"}
+            </p>
+            <p className="text-xs text-muted-foreground">Up to 5 photos, max 5MB each</p>
           </div>
         </div>
 

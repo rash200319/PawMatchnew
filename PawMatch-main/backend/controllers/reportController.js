@@ -8,11 +8,12 @@ exports.submitReport = async (req, res) => {
             return res.status(400).json({ success: false, error: 'Missing required fields' });
         }
 
+        const images = req.files ? req.files.map(file => file.path) : [];
         const query = `
-            INSERT INTO animal_reports (animal_type, condition_type, location, description, contact_name, contact_phone)
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO animal_reports (animal_type, condition_type, location, description, contact_name, contact_phone, images)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
         `;
-        const values = [animalType, condition, location, description, contactName, contactPhone];
+        const values = [animalType, condition, location, description, contactName, contactPhone, JSON.stringify(images)];
 
         const result = await db.query(query, values);
 

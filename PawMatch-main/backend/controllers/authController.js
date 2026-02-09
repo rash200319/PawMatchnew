@@ -38,7 +38,7 @@ exports.register = async (req, res) => {
                 cleanNic = nic.trim();
             }
         }
-       
+
 
         // 3. Check if user exists in MAIN users table
         const userCheck = await db.query('SELECT * FROM users WHERE email = ?', [email]);
@@ -467,7 +467,7 @@ exports.forgotPassword = async (req, res) => {
         if (userRes.rows.length === 0) {
             return res.status(404).json({ error: "User not found" });
         }
-        
+
         // Generate Reset Token
         const resetToken = crypto.randomBytes(32).toString('hex');
         const resetTokenHash = crypto.createHash('sha256').update(resetToken).digest('hex');
@@ -479,7 +479,8 @@ exports.forgotPassword = async (req, res) => {
         );
 
         // Construct Reset URL
-        const resetUrl = `${process.env.CLIENT_URL || 'http://localhost:5173'}/reset-password?token=${resetToken}`;
+        const baseUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+        const resetUrl = `${baseUrl}/reset-password?token=${resetToken}&email=${email}`;
 
         await emailService.sendPasswordReset(email, resetUrl);
 
@@ -568,7 +569,7 @@ exports.updateNotifications = async (req, res) => {
 
         // Assuming toggle logic or specific boolean setting
         await db.query('UPDATE users SET email_notifications = ? WHERE id = ?', [email_notifications, userId]);
-        
+
         res.json({ success: true, message: "Notification preferences updated" });
     } catch (error) {
         console.error("Update Notifications Error:", error);

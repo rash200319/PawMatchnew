@@ -87,7 +87,8 @@ router.get('/shelter/public/:id', shelterController.getShelterPublicProfile);
 
 // Report Routes
 const reportController = require('../controllers/reportController');
-router.post('/reports', reportController.submitReport);
+const { upload } = require('../config/cloudinary');
+router.post('/reports', upload.array('images', 5), reportController.submitReport);
 router.get('/reports', reportController.getRecentReports);
 router.delete('/reports/:id', reportController.deleteReport);
 
