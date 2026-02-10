@@ -340,11 +340,13 @@ exports.login = async (req, res) => {
         let extraData = {};
 
         if (user.role === 'shelter') {
-            const profileRes = await db.query('SELECT organization_name, verification_status FROM shelters WHERE user_id = ?', [user.id]);
-            if (profileRes.rows.length > 0) {
-                profileName = profileRes.rows[0].organization_name;
-                extraData.shelter_name = profileRes.rows[0].organization_name;
-                extraData.verification_status = profileRes.rows[0].verification_status;
+            const profileRes = await db.query('SELECT organization_name, verification_status, shelter_logo_url FROM shelters WHERE user_id = ?', [user.id]);
+            const profileRows = profileRes.rows || profileRes;
+            if (profileRows.length > 0) {
+                profileName = profileRows[0].organization_name;
+                extraData.shelter_name = profileRows[0].organization_name;
+                extraData.verification_status = profileRows[0].verification_status;
+                extraData.shelter_logo_url = profileRows[0].shelter_logo_url;
             }
         } else if (user.role === 'admin') {
             const profileRes = await db.query('SELECT full_name FROM admins WHERE user_id = ?', [user.id]);
@@ -400,15 +402,35 @@ exports.getMe = async (req, res) => {
 
         // 2. Get Profile details from specific tables
         if (user.role === 'shelter') {
-            const pRes = await db.query('SELECT organization_name, contact_number, verification_status, registration_number FROM shelters WHERE user_id = ?', [userId]);
-            if (pRes.rows.length > 0) {
-                const p = pRes.rows[0];
+            const pRes = await db.query(`
+                SELECT 
+                    organization_name, contact_number, verification_status, registration_number,
+                    shelter_code, shelter_slug, shelter_description, shelter_address,
+                    shelter_logo_url, shelter_banner_url, shelter_social_links,
+                    shelter_website, shelter_tagline, latitude, longitude
+                FROM shelters 
+                WHERE user_id = ?
+            `, [userId]);
+            const pRows = pRes.rows || pRes;
+            if (pRows.length > 0) {
+                const p = pRows[0];
                 profile = {
                     name: p.organization_name,
                     shelter_name: p.organization_name,
                     phone_number: p.contact_number,
                     verification_status: p.verification_status,
-                    nic: p.registration_number // Return reg number as NIC for backward compatibility if needed
+                    registration_number: p.registration_number,
+                    shelter_code: p.shelter_code,
+                    shelter_slug: p.shelter_slug,
+                    shelter_description: p.shelter_description,
+                    shelter_address: p.shelter_address,
+                    shelter_logo_url: p.shelter_logo_url,
+                    shelter_banner_url: p.shelter_banner_url,
+                    shelter_social_links: p.shelter_social_links,
+                    shelter_website: p.shelter_website,
+                    shelter_tagline: p.shelter_tagline,
+                    latitude: p.latitude,
+                    longitude: p.longitude
                 };
             }
         } else if (user.role === 'admin') {
