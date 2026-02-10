@@ -17,8 +17,14 @@ exports.submitVerification = async (req, res) => {
 
         const docUrl = req.file.path;
 
+        // Update both tables to maintain consistency
         await db.query(
             "UPDATE users SET registry_type = ?, registration_number = ?, verification_document_url = ?, verification_status = 'pending' WHERE id = ?",
+            [registry_type, registration_number, docUrl, idToUpdate]
+        );
+
+        await db.query(
+            "UPDATE shelters SET registry_type = ?, registration_number = ?, verification_document_url = ?, verification_status = 'pending' WHERE user_id = ?",
             [registry_type, registration_number, docUrl, idToUpdate]
         );
 
@@ -51,6 +57,7 @@ exports.verifyShelter = async (req, res) => {
         const newStatus = action === 'approve' ? 'verified' : 'rejected';
 
         await db.query("UPDATE users SET verification_status = ? WHERE id = ?", [newStatus, shelterId]);
+        await db.query("UPDATE shelters SET verification_status = ? WHERE user_id = ?", [newStatus, shelterId]);
 
         // Send email notification (mock)
         console.log(`Sending email to shelter ${shelterId}: Verification ${newStatus}. Reason: ${reason || 'N/A'}`);
@@ -176,12 +183,15 @@ exports.handleAnimalReport = async (req, res) => {
             message = 'Shelter notified';
 
             // Fetch report and shelter details
-            const [report] = await db.query("SELECT * FROM animal_reports WHERE id = ?", [reportId]);
-            const [shelter] = await db.query("SELECT email, shelter_name FROM users WHERE id = ?", [shelterId]);
+            const reportRes = await db.query("SELECT * FROM animal_reports WHERE id = ?", [reportId]);
+            const shelterRes = await db.query("SELECT email, shelter_name FROM users WHERE id = ?", [shelterId]);
 
-            if (report.length > 0 && shelter.length > 0) {
-                await emailService.sendRescueAlert(shelter[0].email, report[0]);
-                console.log(`Alert sent to ${shelter[0].shelter_name} (${shelter[0].email}) for report #${reportId}`);
+            const reportRows = reportRes.rows || [];
+            const shelterRows = shelterRes.rows || [];
+
+            if (reportRows.length > 0 && shelterRows.length > 0) {
+                await emailService.sendRescueAlert(shelterRows[0].email, reportRows[0]);
+                console.log(`Alert sent to ${shelterRows[0].shelter_name} (${shelterRows[0].email}) for report #${reportId}`);
             }
         } else if (action === 'resolve') {
             statusUpdate = 'resolved';
