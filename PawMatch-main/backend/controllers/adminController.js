@@ -38,7 +38,19 @@ exports.submitVerification = async (req, res) => {
 
 exports.getPendingShelters = async (req, res) => {
     try {
-        const result = await db.query("SELECT id, name, email, shelter_name, shelter_code, shelter_slug, shelter_address, registry_type, registration_number, verification_document_url, created_at FROM users WHERE role = 'shelter' AND verification_status = 'pending'");
+        const query = `
+            SELECT 
+                u.id, u.name, u.email, 
+                s.organization_name as shelter_name, 
+                s.shelter_code, s.shelter_slug, s.shelter_address, 
+                s.registry_type, s.registration_number, s.verification_document_url, 
+                s.created_at 
+            FROM users u
+            JOIN shelters s ON u.id = s.user_id
+            WHERE u.role = 'shelter' 
+            AND s.verification_status = 'pending'
+        `;
+        const result = await db.query(query);
         res.json({ success: true, shelters: result.rows });
     } catch (error) {
         console.error("Get Pending Shelters Error:", error);
@@ -74,7 +86,7 @@ exports.getStats = async (req, res) => {
     try {
         // Mock stats for now, or real queries
         const shelterCount = await db.query("SELECT COUNT(*) as count FROM users WHERE role = 'shelter'");
-        const verifiedCount = await db.query("SELECT COUNT(*) as count FROM users WHERE role = 'shelter' AND verification_status = 'verified'");
+        const verifiedCount = await db.query("SELECT COUNT(*) as count FROM shelters WHERE verification_status = 'verified'");
         const adoptionCount = await db.query("SELECT COUNT(*) as count FROM adoptions");
 
         const alertCount = await db.query("SELECT COUNT(*) as count FROM welfare_logs WHERE risk_flagged = TRUE");
@@ -99,13 +111,18 @@ exports.getAllShelters = async (req, res) => {
     try {
         const query = `
             SELECT 
-                u.id, u.name, u.email, u.shelter_name, u.shelter_code, u.shelter_slug, 
-                u.shelter_address, u.verification_status, u.created_at,
+                u.id, u.name, u.email, 
+                s.organization_name as shelter_name, 
+                s.shelter_code, s.shelter_slug, 
+                s.shelter_address, 
+                s.verification_status, 
+                s.created_at,
                 (SELECT COUNT(*) FROM pets p WHERE p.shelter_id = u.id) as total_pets,
                 (SELECT COUNT(*) FROM adoptions a JOIN pets p ON a.pet_id = p.id WHERE p.shelter_id = u.id AND a.status = 'active') as active_adoptions
             FROM users u
+            JOIN shelters s ON u.id = s.user_id
             WHERE u.role = 'shelter'
-            ORDER BY u.created_at DESC
+            ORDER BY s.created_at DESC
         `;
         const result = await db.query(query);
         res.json({ success: true, shelters: result.rows });
