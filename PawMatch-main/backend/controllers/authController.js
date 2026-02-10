@@ -16,7 +16,7 @@ const generateOTP = () => {
 
 exports.register = async (req, res) => {
     try {
-        const { name, email, password, phone, nic, role, shelter_name, shelter_address } = req.body;
+        const { name, email, password, phone, nic, role, shelter_name } = req.body;
 
         // 1. Basic Validation
         const userRole = role === 'shelter' ? 'shelter' : 'adopter';
@@ -61,13 +61,13 @@ exports.register = async (req, res) => {
 
         if (pendingCheck.rows.length > 0) {
             await db.query(
-                'UPDATE pending_users SET name = ?, password_hash = ?, phone_number = ?, nic = ?, role = ?, shelter_name = ?, shelter_address = ?, totp_secret = ?, otp_expires_at = ? WHERE email = ?',
-                [name, hashedPassword, phone || null, cleanNic, userRole, shelter_name || null, shelter_address || null, totpSecret, otpExpiresAt, email]
+                'UPDATE pending_users SET name = ?, password_hash = ?, phone_number = ?, nic = ?, role = ?, shelter_name = ?, totp_secret = ?, otp_expires_at = ? WHERE email = ?',
+                [name, hashedPassword, phone || null, cleanNic, userRole, shelter_name || null, totpSecret, otpExpiresAt, email]
             );
         } else {
             await db.query(
-                'INSERT INTO pending_users (name, email, password_hash, phone_number, role, shelter_name, shelter_address, is_verified, nic, totp_secret, otp_expires_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-                [name, email, hashedPassword, phone || null, userRole, shelter_name || null, shelter_address || null, false, cleanNic, totpSecret, otpExpiresAt]
+                'INSERT INTO pending_users (name, email, password_hash, phone_number, role, shelter_name, is_verified, nic, totp_secret, otp_expires_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                [name, email, hashedPassword, phone || null, userRole, shelter_name || null, false, cleanNic, totpSecret, otpExpiresAt]
             );
         }
 
@@ -153,12 +153,11 @@ exports.verifyEmail = async (req, res) => {
             // 5. Insert into Profile Table based on Role
             if (pendingUser.role === 'shelter') {
                 await connection.query(
-                    'INSERT INTO shelters (user_id, organization_name, contact_number, shelter_address, registration_number, verification_status) VALUES (?, ?, ?, ?, ?, ?)',
+                    'INSERT INTO shelters (user_id, organization_name, contact_number, registration_number, verification_status) VALUES (?, ?, ?, ?, ?)',
                     [
                         newUserId,
                         pendingUser.shelter_name || pendingUser.name,
                         pendingUser.phone_number,
-                        pendingUser.shelter_address,
                         pendingUser.nic, // Mapping NIC field to Registration Number for shelters
                         'pending' // Default status for new shelters
                     ]
@@ -407,7 +406,7 @@ exports.getMe = async (req, res) => {
             const pRes = await db.query(`
                 SELECT 
                     organization_name, contact_number, verification_status, registration_number,
-                    shelter_code, shelter_slug, shelter_description, shelter_address,
+                    shelter_code, shelter_slug, shelter_description,
                     shelter_logo_url, shelter_banner_url, shelter_social_links,
                     shelter_website, shelter_tagline, latitude, longitude
                 FROM shelters 
@@ -425,7 +424,6 @@ exports.getMe = async (req, res) => {
                     shelter_code: p.shelter_code,
                     shelter_slug: p.shelter_slug,
                     shelter_description: p.shelter_description,
-                    shelter_address: p.shelter_address,
                     shelter_logo_url: p.shelter_logo_url,
                     shelter_banner_url: p.shelter_banner_url,
                     shelter_social_links: p.shelter_social_links,

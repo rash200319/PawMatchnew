@@ -8,7 +8,7 @@ exports.uploadVerificationDoc = upload.single('document');
 
 exports.submitVerification = async (req, res) => {
     try {
-        const { registry_type, registration_number, shelter_address } = req.body;
+        const { registry_type, registration_number } = req.body;
         const idToUpdate = req.user.id;
 
         if (!req.file) {
@@ -19,13 +19,13 @@ exports.submitVerification = async (req, res) => {
 
         // Update both tables to maintain consistency
         await db.query(
-            "UPDATE users SET registry_type = ?, registration_number = ?, verification_document_url = ?, shelter_address = ?, verification_status = 'pending' WHERE id = ?",
-            [registry_type, registration_number, docUrl, shelter_address, idToUpdate]
+            "UPDATE users SET registry_type = ?, registration_number = ?, verification_document_url = ?, verification_status = 'pending' WHERE id = ?",
+            [registry_type, registration_number, docUrl, idToUpdate]
         );
 
         await db.query(
-            "UPDATE shelters SET registry_type = ?, registration_number = ?, verification_document_url = ?, shelter_address = ?, verification_status = 'pending' WHERE user_id = ?",
-            [registry_type, registration_number, docUrl, shelter_address, idToUpdate]
+            "UPDATE shelters SET registry_type = ?, registration_number = ?, verification_document_url = ?, verification_status = 'pending' WHERE user_id = ?",
+            [registry_type, registration_number, docUrl, idToUpdate]
         );
 
         res.json({ success: true, message: "Verification submitted successfully", verification_status: 'pending' });
@@ -42,7 +42,7 @@ exports.getPendingShelters = async (req, res) => {
             SELECT 
                 u.id, u.name, u.email, 
                 COALESCE(s.organization_name, u.shelter_name, u.name) as shelter_name, 
-                s.shelter_code, s.shelter_slug, s.shelter_address, 
+                s.shelter_code, s.shelter_slug, 
                 s.registry_type, s.registration_number, s.verification_document_url, 
                 s.created_at 
             FROM users u
@@ -114,7 +114,6 @@ exports.getAllShelters = async (req, res) => {
                 u.id, u.name, u.email, 
                 COALESCE(s.organization_name, u.shelter_name, u.name) as shelter_name, 
                 s.shelter_code, s.shelter_slug, 
-                s.shelter_address, 
                 s.verification_status, 
                 s.created_at,
                 (SELECT COUNT(*) FROM pets p WHERE p.shelter_id = u.id) as total_pets,

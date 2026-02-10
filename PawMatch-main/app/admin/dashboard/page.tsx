@@ -307,7 +307,7 @@ export default function AdminDashboardPage() {
                                                             <Search className="w-4 h-4 mr-2" />
                                                             Search Database
                                                         </Button>
-                                                        <Button variant="outline" size="sm" className="bg-white" onClick={() => window.open(`https://www.google.com/maps/search/${selectedShelter.shelter_name}+${selectedShelter.shelter_address || ''}`, '_blank')}>
+                                                        <Button variant="outline" size="sm" className="bg-white" onClick={() => window.open(`https://www.google.com/maps/search/${selectedShelter.shelter_name}`, '_blank')}>
                                                             <MapPin className="w-4 h-4 mr-2" />
                                                             Locate
                                                         </Button>
@@ -343,10 +343,7 @@ export default function AdminDashboardPage() {
                                                                 <label className="text-muted-foreground block mb-1">Email</label>
                                                                 <div className="font-medium">{selectedShelter.email}</div>
                                                             </div>
-                                                            <div className="col-span-2">
-                                                                <label className="text-muted-foreground block mb-1">Physical Address</label>
-                                                                <div className="font-medium">{selectedShelter.shelter_address || "Not provided"}</div>
-                                                            </div>
+                                                            {/* Physical Address field removed */}
                                                         </div>
 
                                                         <div className="pt-8 space-y-3">

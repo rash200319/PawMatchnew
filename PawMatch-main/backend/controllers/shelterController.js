@@ -213,13 +213,11 @@ exports.getShelterPublicProfile = async (req, res) => {
                 u.phone_number as user_phone, 
                 u.shelter_name as user_shelter_name,
                 u.shelter_description as user_description,
-                u.shelter_address as user_address,
                 u.role, 
                 u.created_at as user_joined,
                 s.organization_name, 
                 s.contact_number,
                 s.shelter_description, 
-                s.shelter_address, 
                 s.shelter_logo_url, 
                 s.shelter_banner_url, 
                 s.shelter_social_links, 
@@ -244,7 +242,7 @@ exports.getShelterPublicProfile = async (req, res) => {
         console.log(`[DEBUG] Raw DB data for shelter ${id}:`);
         console.log(`  - s.organization_name: "${data.organization_name}"`);
         console.log(`  - s.contact_number: "${data.contact_number}"`);
-        console.log(`  - s.shelter_address: "${data.shelter_address}"`);
+        // console.log(`  - s.shelter_address: "${data.shelter_address}"`);
         console.log(`  - u.name: "${data.user_name}"`);
         console.log(`  - u.phone_number: "${data.user_phone}"`);
 
@@ -268,8 +266,8 @@ exports.getShelterPublicProfile = async (req, res) => {
             // Phone: shelters.contact_number > users.phone_number > "Not provided"
             phone_number: clean(data.contact_number) || clean(data.user_phone) || "Not provided",
 
-            // Address: shelters.shelter_address > users.shelter_address > "Address not provided"
-            shelter_address: clean(data.shelter_address) || clean(data.user_address) || "Address not provided",
+            // Address is no longer stored directly.
+            // Consider deriving location from latitude/longitude if needed.
 
             // Other fields
             shelter_description: clean(data.shelter_description) || clean(data.user_description) || "",
@@ -286,7 +284,7 @@ exports.getShelterPublicProfile = async (req, res) => {
         console.log(`[DEBUG] Final shelter object:`);
         console.log(`  - shelter_name: "${shelter.shelter_name}"`);
         console.log(`  - phone_number: "${shelter.phone_number}"`);
-        console.log(`  - shelter_address: "${shelter.shelter_address}"`);
+        // console.log(`  - shelter_address: "${shelter.shelter_address}"`);
 
         // 2. Get Available Pets for this Shelter
         const petsRes = await db.query(`

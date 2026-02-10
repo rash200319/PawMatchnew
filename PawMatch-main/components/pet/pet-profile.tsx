@@ -305,7 +305,7 @@ export function PetProfile({ id }: PetProfileProps) {
       name: pet.shelter_name || "PawMatch Partner Shelter",
       phone: pet.shelter_phone || "+94 11 234 5678",
       email: pet.shelter_email || "adopt@pawmatch.lk",
-      address: pet.shelter_address || "PawMatch Verified Location",
+      address: "PawMatch Verified Location",
     }
   }
 

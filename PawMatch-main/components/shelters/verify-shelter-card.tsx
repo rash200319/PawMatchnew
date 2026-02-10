@@ -20,8 +20,7 @@ export function VerifyShelterCard({ status, userId, onVerificationSubmitted }: V
     const [file, setFile] = useState<File | null>(null)
     const [formData, setFormData] = useState({
         registry_type: "",
-        registration_number: "",
-        shelter_address: ""
+        registration_number: ""
     })
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -32,7 +31,7 @@ export function VerifyShelterCard({ status, userId, onVerificationSubmitted }: V
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
-        if (!file || !formData.registry_type || !formData.registration_number || !formData.shelter_address) {
+        if (!file || !formData.registry_type || !formData.registration_number) {
             alert("Please fill all fields and upload document")
             return
         }
@@ -43,7 +42,6 @@ export function VerifyShelterCard({ status, userId, onVerificationSubmitted }: V
             data.append('userId', userId.toString())
             data.append('registry_type', formData.registry_type)
             data.append('registration_number', formData.registration_number)
-            data.append('shelter_address', formData.shelter_address)
             data.append('document', file)
 
             const token = sessionStorage.getItem('token');
@@ -136,16 +134,7 @@ export function VerifyShelterCard({ status, userId, onVerificationSubmitted }: V
                         </div>
                     </div>
 
-                    <div className="space-y-2">
-                        <Label htmlFor="shelter_address">Physical Address</Label>
-                        <Input
-                            id="shelter_address"
-                            placeholder="Full address of your facility"
-                            value={formData.shelter_address}
-                            onChange={(e) => setFormData(docs => ({ ...docs, shelter_address: e.target.value }))}
-                            required
-                        />
-                    </div>
+                    {/* Physical Address field removed as per new schema */}
 
                     <div className="space-y-2">
                         <Label>Certificate of Registration (PDF or Image)</Label>

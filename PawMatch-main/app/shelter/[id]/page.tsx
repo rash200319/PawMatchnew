@@ -131,7 +131,7 @@ export default function ShelterProfilePage() {
                                 <h2 className="text-2xl font-bold mb-4">About the Shelter</h2>
                                 <div className="prose prose-neutral dark:prose-invert max-w-none">
                                     <p className="text-muted-foreground leading-relaxed text-lg">
-                                        {shelter.shelter_description || `${shelter.shelter_name} is a dedicated animal welfare organization${shelter.shelter_address ? ` located in ${shelter.shelter_address}` : ''}. Our mission is to provide a safe haven for animals in need and facilitate successful adoptions into loving forever homes.`}
+                                        {shelter.shelter_description || `${shelter.shelter_name} is a dedicated animal welfare organization. Our mission is to provide a safe haven for animals in need and facilitate successful adoptions into loving forever homes.`}
                                     </p>
                                 </div>
                             </section>
@@ -157,7 +157,7 @@ export default function ShelterProfilePage() {
                                 </Card>
                                 <Card className="p-4 text-center border-none bg-indigo-500/5">
                                     <MapPin className="w-6 h-6 text-indigo-500 mx-auto mb-2" />
-                                    <p className="text-lg font-bold text-indigo-500 truncate">{shelter.shelter_address?.split(',')[0] || 'N/A'}</p>
+                                    <p className="text-lg font-bold text-indigo-500 truncate">Online Presence</p>
                                     <p className="text-xs text-muted-foreground uppercase font-semibold">Location</p>
                                 </Card>
                             </div>
@@ -259,15 +259,7 @@ export default function ShelterProfilePage() {
                                 <h3 className="text-xl font-bold mb-6">Connect with Us</h3>
 
                                 <div className="space-y-6">
-                                    <div className="flex items-start gap-4">
-                                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                                            <MapPin className="w-5 h-5 text-primary" />
-                                        </div>
-                                        <div>
-                                            <p className="text-sm font-semibold text-foreground">Visit Address</p>
-                                            <p className="text-sm text-muted-foreground">{shelter.shelter_address || 'Not provided'}</p>
-                                        </div>
-                                    </div>
+                                    {/* Visit Address field removed */}
 
                                     <div className="flex items-start gap-4">
                                         <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">

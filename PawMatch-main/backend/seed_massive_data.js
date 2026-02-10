@@ -76,9 +76,9 @@ async function seed() {
         for (const sData of shelters) {
             // 1. Create Shelter User
             const result = await db.query(
-                `INSERT INTO users (name, email, password_hash, role, shelter_name, verification_status, shelter_code, shelter_address, shelter_tagline, shelter_slug, latitude, longitude, is_verified) 
-                 VALUES (?, ?, ?, 'shelter', ?, 'verified', ?, ?, ?, ?, ?, ?, 1)`,
-                [sData.name, sData.email, passwordHash, sData.name, sData.code, sData.address, sData.tagline, sData.slug, sData.lat, sData.lng]
+                `INSERT INTO users (name, email, password_hash, role, shelter_name, verification_status, shelter_code, shelter_tagline, shelter_slug, latitude, longitude, is_verified) 
+                 VALUES (?, ?, ?, 'shelter', ?, 'verified', ?, ?, ?, ?, ?, 1)`,
+                [sData.name, sData.email, passwordHash, sData.name, sData.code, sData.tagline, sData.slug, sData.lat, sData.lng]
             );
 
             const shelterId = result.rows.insertId;

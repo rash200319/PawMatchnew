@@ -38,8 +38,8 @@ INSERT INTO `users` (id, name, email, password_hash, role, is_verified, is_email
 INSERT INTO `admins` (user_id, full_name, department) VALUES
 (1, 'Super Admin', 'Executive');
 
-INSERT INTO `shelters` (user_id, organization_name, contact_number, registration_number, verification_status, shelter_code, shelter_slug, shelter_address) VALUES
-(2, 'Happy Tails Shelter', '+94 11 234 5678', 'REG-HT-001', 'verified', 'HTS001', 'happy-tails', '123 Rescue Road, Colombo 03');
+INSERT INTO `shelters` (user_id, organization_name, contact_number, registration_number, verification_status, shelter_code, shelter_slug) VALUES
+(2, 'Happy Tails Shelter', '+94 11 234 5678', 'REG-HT-001', 'verified', 'HTS001', 'happy-tails');
 
 INSERT INTO `adopters` (user_id, full_name, phone_number, pawsonality_results) VALUES
 (3, 'Jane Adopter', '+94 77 123 4567', '{"1":"apartment","2":"moderate","3":"limited","4":"couple","5":"first","6":"none","7":"suburban"}');

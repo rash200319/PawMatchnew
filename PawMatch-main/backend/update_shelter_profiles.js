@@ -7,7 +7,6 @@ async function updateShelterSchema() {
         const columns = [
             "ALTER TABLE users ADD COLUMN shelter_code VARCHAR(20) UNIQUE",
             "ALTER TABLE users ADD COLUMN shelter_description TEXT",
-            "ALTER TABLE users ADD COLUMN shelter_address TEXT",
             "ALTER TABLE users ADD COLUMN shelter_logo_url VARCHAR(500)",
             "ALTER TABLE users ADD COLUMN shelter_banner_url VARCHAR(500)",
             "ALTER TABLE users ADD COLUMN shelter_social_links JSON",
