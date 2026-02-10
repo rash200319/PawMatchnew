@@ -6,7 +6,10 @@ const jwt = require('jsonwebtoken');
 const emailService = require('../services/emailService');
 const nicValidator = require('../utils/nicValidator');
 
-// Helper to generate 6 digit OTP
+const otplib = require('otplib');
+const qrcode = require('qrcode');
+
+// Helper to generate 6 digit OTP (fallback)
 const generateOTP = () => {
     return Math.floor(100000 + Math.random() * 900000).toString();
 };
@@ -23,10 +26,8 @@ exports.register = async (req, res) => {
         }
 
         // 2. NIC/Registration Number Validation
-        // For shelters, we treat NIC input as Registration Number if provided, or handle per requirements
         let cleanNic = null;
         if (nic) {
-            // If it's a personal NIC, validate it. If it's a shelter Reg No, we might skip standard NIC validation
             if (userRole === 'adopter') {
                 const nicValidation = nicValidator(nic);
                 if (!nicValidation.valid) {
@@ -34,51 +35,55 @@ exports.register = async (req, res) => {
                 }
                 cleanNic = nicValidation.nic;
             } else {
-                // For shelters, just clean the input
                 cleanNic = nic.trim();
             }
         }
 
-
-        // 3. Check if user exists in MAIN users table
+        // 3. Check if user exists
         const userCheck = await db.query('SELECT * FROM users WHERE email = ?', [email]);
         if (userCheck.rows.length > 0) {
             return res.status(400).json({ error: 'User already exists' });
         }
 
-        // 4. Hash Password & Generate OTP
+        // 4. Hash Password & Setup TOTP
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
-        const otp = generateOTP();
-        const otpSalt = await bcrypt.genSalt(10);
-        const otpHash = await bcrypt.hash(otp, otpSalt);
+
+        // Use TOTP instead of random OTP
+        const totpSecret = otplib.authenticator.generateSecret();
+        const otpauth = otplib.authenticator.keyuri(email, 'PawMatch', totpSecret);
+        const qrCodeDataUrl = await qrcode.toDataURL(otpauth);
+
         const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
-        // 5. Handle Pending Users (Upsert Logic)
+        // 5. Handle Pending Users
         const pendingCheck = await db.query('SELECT * FROM pending_users WHERE email = ?', [email]);
 
         if (pendingCheck.rows.length > 0) {
-            // Update existing pending record
             await db.query(
-                'UPDATE pending_users SET name = ?, password_hash = ?, phone_number = ?, nic = ?, role = ?, shelter_name = ?, otp_hash = ?, otp_expires_at = ? WHERE email = ?',
-                [name, hashedPassword, phone || null, cleanNic, userRole, shelter_name || null, otpHash, otpExpiresAt, email]
+                'UPDATE pending_users SET name = ?, password_hash = ?, phone_number = ?, nic = ?, role = ?, shelter_name = ?, totp_secret = ?, otp_expires_at = ? WHERE email = ?',
+                [name, hashedPassword, phone || null, cleanNic, userRole, shelter_name || null, totpSecret, otpExpiresAt, email]
             );
         } else {
-            // Insert new pending user
             await db.query(
-                'INSERT INTO pending_users (name, email, password_hash, phone_number, role, shelter_name, is_verified, nic, otp_hash, otp_expires_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-                [name, email, hashedPassword, phone || null, userRole, shelter_name || null, false, cleanNic, otpHash, otpExpiresAt]
+                'INSERT INTO pending_users (name, email, password_hash, phone_number, role, shelter_name, is_verified, nic, totp_secret, otp_expires_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                [name, email, hashedPassword, phone || null, userRole, shelter_name || null, false, cleanNic, totpSecret, otpExpiresAt]
             );
         }
 
-        await emailService.sendOTP(email, otp);
-
         res.status(200).json({
             success: true,
-            message: 'Verification code sent to your email.',
+            message: 'Setup your authenticator app to continue.',
             requiresVerification: true,
-            email: email
+            email: email,
+            qrCode: qrCodeDataUrl // Send QR code to frontend
         });
+
+        // Background logging (still keeping it for debugging)
+        console.log(`\n==================================================`);
+        console.log(`🔐 TOTP Setup for ${email}`);
+        console.log(`Secret: ${totpSecret}`);
+        console.log(`==================================================\n`);
 
     } catch (error) {
         console.error('Registration Error:', error);
@@ -106,17 +111,21 @@ exports.verifyEmail = async (req, res) => {
 
         const pendingUser = pendingUsers[0];
 
-        // 2. Check Expiry
+        // 2. Check Expiry (Optional for TOTP but good for cleanup)
         if (new Date() > new Date(pendingUser.otp_expires_at)) {
             connection.release();
-            return res.status(400).json({ error: 'OTP has expired' });
+            return res.status(400).json({ error: 'Verification window expired' });
         }
 
-        // 3. Verify OTP Hash
-        const isMatch = await bcrypt.compare(otp, pendingUser.otp_hash);
-        if (!isMatch) {
+        // 3. Verify TOTP Code
+        const isValid = otplib.authenticator.verify({
+            token: otp,
+            secret: pendingUser.totp_secret
+        });
+
+        if (!isValid) {
             connection.release();
-            return res.status(400).json({ error: 'Invalid OTP' });
+            return res.status(400).json({ error: 'Invalid verification code' });
         }
 
         // --- START TRANSACTION ---
@@ -124,9 +133,19 @@ exports.verifyEmail = async (req, res) => {
 
         try {
             // 4. Insert into Base Table (USERS)
+            // Fix: Include name, phone, etc. for backward compatibility with controllers that still read from 'users'
             const [insertRes] = await connection.query(
-                'INSERT INTO users (email, password_hash, role, is_email_verified) VALUES (?, ?, ?, TRUE)',
-                [pendingUser.email, pendingUser.password_hash, pendingUser.role]
+                `INSERT INTO users (email, password_hash, role, is_email_verified, name, phone_number, shelter_name, nic) 
+                 VALUES (?, ?, ?, TRUE, ?, ?, ?, ?)`,
+                [
+                    pendingUser.email,
+                    pendingUser.password_hash,
+                    pendingUser.role,
+                    pendingUser.name,
+                    pendingUser.phone_number,
+                    pendingUser.role === 'shelter' ? (pendingUser.shelter_name || pendingUser.name) : null,
+                    pendingUser.nic
+                ]
             );
 
             const newUserId = insertRes.insertId;
@@ -222,18 +241,23 @@ exports.resendOTP = async (req, res) => {
             return res.status(404).json({ error: "Verification record not found" });
         }
 
-        const otp = generateOTP();
-        const otpSalt = await bcrypt.genSalt(10);
-        const otpHash = await bcrypt.hash(otp, otpSalt);
+        const pendingUser = pendingCheck.rows[0];
+        const totpSecret = pendingUser.totp_secret || otplib.authenticator.generateSecret();
+
+        const otpauth = otplib.authenticator.keyuri(email, 'PawMatch', totpSecret);
+        const qrCodeDataUrl = await qrcode.toDataURL(otpauth);
         const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
         await db.query(
-            'UPDATE pending_users SET otp_hash = ?, otp_expires_at = ? WHERE email = ?',
-            [otpHash, otpExpiresAt, email]
+            'UPDATE pending_users SET totp_secret = ?, otp_expires_at = ? WHERE email = ?',
+            [totpSecret, otpExpiresAt, email]
         );
 
-        await emailService.sendOTP(email, otp);
-        res.json({ success: true, message: "OTP resent" });
+        res.json({
+            success: true,
+            message: "Setup instructions simplified.",
+            qrCode: qrCodeDataUrl
+        });
 
     } catch (error) {
         console.error("Resend OTP Error:", error);
@@ -389,20 +413,22 @@ exports.getMe = async (req, res) => {
             }
         } else if (user.role === 'admin') {
             const pRes = await db.query('SELECT full_name, department FROM admins WHERE user_id = ?', [userId]);
-            if (pRes.rows.length > 0) {
+            const pRows = pRes.rows || [];
+            if (pRows.length > 0) {
                 profile = {
-                    name: pRes.rows[0].full_name,
-                    department: pRes.rows[0].department
+                    name: pRows[0].full_name,
+                    department: pRows[0].department
                 };
             }
         } else {
             // Adopter
             const pRes = await db.query('SELECT full_name, phone_number, pawsonality_results FROM adopters WHERE user_id = ?', [userId]);
-            if (pRes.rows.length > 0) {
+            const pRows = pRes.rows || [];
+            if (pRows.length > 0) {
                 profile = {
-                    name: pRes.rows[0].full_name,
-                    phone_number: pRes.rows[0].phone_number,
-                    pawsonality_results: pRes.rows[0].pawsonality_results
+                    name: pRows[0].full_name,
+                    phone_number: pRows[0].phone_number,
+                    pawsonality_results: pRows[0].pawsonality_results
                 };
             }
         }
@@ -429,15 +455,23 @@ exports.updateProfile = async (req, res) => {
         }
         const role = userRes.rows[0].role;
 
-        // Update the specific table, NOT the users table
+        // Update BOTH tables to maintain consistency
         if (role === 'shelter') {
             await db.query(
                 'UPDATE shelters SET organization_name = COALESCE(?, organization_name), contact_number = COALESCE(?, contact_number) WHERE user_id = ?',
                 [name, phone_number, userId]
             );
+            await db.query(
+                'UPDATE users SET name = COALESCE(?, name), shelter_name = COALESCE(?, shelter_name), phone_number = COALESCE(?, phone_number) WHERE id = ?',
+                [name, name, phone_number, userId]
+            );
         } else if (role === 'admin') {
             await db.query(
                 'UPDATE admins SET full_name = COALESCE(?, full_name) WHERE user_id = ?',
+                [name, userId]
+            );
+            await db.query(
+                'UPDATE users SET name = COALESCE(?, name) WHERE id = ?',
                 [name, userId]
             );
         } else {
@@ -446,8 +480,11 @@ exports.updateProfile = async (req, res) => {
                 'UPDATE adopters SET full_name = COALESCE(?, full_name), phone_number = COALESCE(?, phone_number) WHERE user_id = ?',
                 [name, phone_number, userId]
             );
+            await db.query(
+                'UPDATE users SET name = COALESCE(?, name), phone_number = COALESCE(?, phone_number) WHERE id = ?',
+                [name, phone_number, userId]
+            );
         }
-
         await logActivity(userId, 'PROFILE_UPDATE', { name, phone_number });
         res.json({ success: true, message: 'Profile updated' });
 
@@ -482,9 +519,10 @@ exports.forgotPassword = async (req, res) => {
         const baseUrl = process.env.CLIENT_URL || 'http://localhost:5173';
         const resetUrl = `${baseUrl}/reset-password?token=${resetToken}&email=${email}`;
 
-        await emailService.sendPasswordReset(email, resetUrl);
-
         res.json({ success: true, message: "Password reset link sent" });
+
+        // Fire and forget email
+        emailService.sendPasswordReset(email, resetUrl);
     } catch (error) {
         console.error("Forgot Password Error:", error);
         res.status(500).json({ error: "Server Error" });
