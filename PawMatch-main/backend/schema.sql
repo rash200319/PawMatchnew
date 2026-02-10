@@ -1,164 +1,76 @@
--- Users Table
-CREATE TABLE IF NOT EXISTS users (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(255),
-    email VARCHAR(255) UNIQUE NOT NULL,
-    password_hash VARCHAR(255),
-    phone_number VARCHAR(20),
-    is_verified BOOLEAN DEFAULT FALSE,
-    pawsonality_results JSON,
-    role VARCHAR(20) DEFAULT 'adopter', -- 'adopter', 'shelter', 'admin'
-    shelter_name VARCHAR(255), -- Only for shelters
-    verification_status VARCHAR(20) DEFAULT 'unverified', -- unverified, pending, verified, rejected
-    registry_type VARCHAR(50), -- NGO Secretariat, Dept of Animal Production
-    registration_number VARCHAR(50),
-    verification_document_url VARCHAR(500),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+-- PawMatch Consistent Seeding Script
+-- This script clears inconsistent data and populates the database with a clean, working set.
 
--- Pets Table
-CREATE TABLE IF NOT EXISTS pets (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    type VARCHAR(50) NOT NULL, -- Dog, Cat
-    breed VARCHAR(100),
-    age VARCHAR(50), -- "2 years", "4 months"
-    gender VARCHAR(10),
-    size VARCHAR(20), -- Small, Medium, Large
-    energy_level VARCHAR(20), -- sedentary, moderate, active, athletic
-    temperament JSON, -- Tags like "Friendly", "Shy", "Good with kids"
-    social_profile JSON, -- {"dogs": true, "cats": false, "kids": true}
-    living_situation_match JSON, -- {"apartment": true, "house_small": true}
-    image_url VARCHAR(500),
-    shelter_id INT, -- mock ID
-    status VARCHAR(50) DEFAULT 'available',
-    description TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+-- 0. Disable Foreign Key Checks for safe deletion
+SET FOREIGN_KEY_CHECKS = 0;
 
--- Adoptions Table
-CREATE TABLE IF NOT EXISTS adoptions (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT,
-    pet_id INT,
-    adoption_date DATE DEFAULT (CURRENT_DATE),
-    status VARCHAR(50) DEFAULT 'pending', -- pending, approved, active, completed
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id),
-    FOREIGN KEY (pet_id) REFERENCES pets(id)
-);
+-- 1. Clear existing data from specified tables
+TRUNCATE TABLE `welfare_logs`;
+TRUNCATE TABLE `shelter_messages`;
+TRUNCATE TABLE `shelter_visits`;
+TRUNCATE TABLE `adoptions`;
+TRUNCATE TABLE `foster_assignments`;
+TRUNCATE TABLE `pet_views`;
+TRUNCATE TABLE `pets`;
+TRUNCATE TABLE `activity_logs`;
+TRUNCATE TABLE `user_achievements`;
+TRUNCATE TABLE `adopters`;
+TRUNCATE TABLE `admins`;
+TRUNCATE TABLE `shelters`;
+TRUNCATE TABLE `users`;
+TRUNCATE TABLE `animal_reports`;
 
--- Welfare Logs Table
-CREATE TABLE IF NOT EXISTS welfare_logs (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    adoption_id INT,
-    log_date DATE DEFAULT (CURRENT_DATE),
-    checklist JSON, -- {"morning_feed": true, "walk": true}
-    mood VARCHAR(50),
-    notes TEXT,
-    risk_flagged BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (adoption_id) REFERENCES adoptions(id)
-);
+-- 2. Re-enable Foreign Key Checks
+SET FOREIGN_KEY_CHECKS = 1;
 
--- Seed Data for Pets
-INSERT INTO pets (name, type, breed, age, gender, size, energy_level, temperament, social_profile, living_situation_match, image_url, description) VALUES
-('Bruno', 'Dog', 'Labrador Mix', '2 years', 'Male', 'Large', 'active', '["Friendly", "Playful", "Smart"]', '{"dogs": true, "cats": true, "kids": true}', '{"house_small": true, "house_large": true, "rural": true, "apartment": false}', 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&q=80', 'Bruno is a high-energy lab mix who loves to play fetch and swim.'),
-('Luna', 'Dog', 'Beagle', '4 years', 'Female', 'Medium', 'moderate', '["Gentle", "Curious", "Food-motivated"]', '{"dogs": true, "cats": false, "kids": true}', '{"house_small": true, "house_large": true, "rural": true, "apartment": true}', 'https://images.unsplash.com/photo-1537151608828-ea2b11777ee8?auto=format&fit=crop&q=80', 'Luna is a sweet beagle who loves sniffaris and following her nose.'),
-('Rocky', 'Dog', 'German Shepherd', '3 years', 'Male', 'Large', 'athletic', '["Loyal", "Protective", "Intelligent"]', '{"dogs": false, "cats": false, "kids": false}', '{"house_large": true, "rural": true, "apartment": false, "house_small": false}', 'https://images.unsplash.com/photo-1589941013453-ec89f33b5e95?auto=format&fit=crop&q=80', 'Rocky needs an experienced handler and lots of exercise.'),
-('Bella', 'Dog', 'Pug', '5 years', 'Female', 'Small', 'sedentary', '["Affectionate", "Calm", "Funny"]', '{"dogs": true, "cats": true, "kids": true}', '{"apartment": true, "house_small": true, "house_large": true, "rural": true}', 'https://images.unsplash.com/photo-1517423568366-8b83523034fd?auto=format&fit=crop&q=80', 'Bella loves to cuddle and nap. Perfect for apartment living.');
+-- 3. Seed Users
+-- Password for all: 'password123' (Hash: $2b$10$vPHUNV0GCi.OeMp/EIBSqeSCxQLH3bhC01J1WWlxNRUIn7Pw1.U76)
+-- Admin: admin@pawmatch.com / password123
+-- Shelter: shelter@pawmatch.com / password123
+-- Adopter: adopter@pawmatch.com / password123
 
-ALTER TABLE users 
-ADD COLUMN otp_hash VARCHAR(255),
-ADD COLUMN otp_expires_at DATETIME,
-ADD COLUMN reset_token_hash VARCHAR(255),
-ADD COLUMN reset_token_expires_at DATETIME,
-ADD COLUMN nic VARCHAR(20),
-ADD COLUMN email_notifications BOOLEAN DEFAULT TRUE,
-ADD COLUMN sms_alerts BOOLEAN DEFAULT TRUE;
+INSERT INTO `users` (id, name, email, password_hash, role, is_verified, is_email_verified) VALUES
+(1, 'Super Admin', 'admin@pawmatch.com', '$2b$10$vPHUNV0GCi.OeMp/EIBSqeSCxQLH3bhC01J1WWlxNRUIn7Pw1.U76', 'admin', 1, 1),
+(2, 'Happy Tails Shelter', 'shelter@pawmatch.com', '$2b$10$vPHUNV0GCi.OeMp/EIBSqeSCxQLH3bhC01J1WWlxNRUIn7Pw1.U76', 'shelter', 1, 1),
+(3, 'Jane Adopter', 'adopter@pawmatch.com', '$2b$10$vPHUNV0GCi.OeMp/EIBSqeSCxQLH3bhC01J1WWlxNRUIn7Pw1.U76', 'adopter', 1, 1);
 
-ALTER TABLE pets
-ADD COLUMN is_foster BOOLEAN DEFAULT FALSE;
+-- 4. Seed Profiles
+INSERT INTO `admins` (user_id, full_name, department) VALUES
+(1, 'Super Admin', 'Executive');
 
-ALTER TABLE pets
-ADD COLUMN weight VARCHAR(50),
-ADD COLUMN is_vaccinated BOOLEAN DEFAULT FALSE,
-ADD COLUMN is_neutered BOOLEAN DEFAULT FALSE,
-ADD COLUMN is_microchipped BOOLEAN DEFAULT FALSE,
-ADD COLUMN is_health_checked BOOLEAN DEFAULT FALSE;
+INSERT INTO `shelters` (user_id, organization_name, contact_number, registration_number, verification_status, shelter_code, shelter_slug, shelter_address) VALUES
+(2, 'Happy Tails Shelter', '+94 11 234 5678', 'REG-HT-001', 'verified', 'HTS001', 'happy-tails', '123 Rescue Road, Colombo 03');
 
--- Activity Logs Table
-CREATE TABLE IF NOT EXISTS activity_logs (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT,
-    action_type VARCHAR(100),
-    details JSON,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+INSERT INTO `adopters` (user_id, full_name, phone_number, pawsonality_results) VALUES
+(3, 'Jane Adopter', '+94 77 123 4567', '{"1":"apartment","2":"moderate","3":"limited","4":"couple","5":"first","6":"none","7":"suburban"}');
 
--- Animal Reports Table
-CREATE TABLE IF NOT EXISTS animal_reports (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    animal_type VARCHAR(50),
-    condition_type VARCHAR(50),
-    location VARCHAR(255),
-    description TEXT,
-    contact_name VARCHAR(100),
-    contact_phone VARCHAR(50),
-    status VARCHAR(20) DEFAULT 'pending',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+-- 5. Seed Pets (Linked to Shelter User ID 2)
+INSERT INTO `pets` (id, name, type, breed, age, gender, size, energy_level, temperament, social_profile, living_situation_match, image_url, shelter_id, status, description, is_foster) VALUES
+(1, 'Buddy', 'Dog', 'Golden Retriever', '2 years', 'Male', 'Large', 'active', '["Friendly", "Playful", "Patient"]', '{"cats": true, "dogs": true, "kids": true}', '{"apartment": false, "house_large": true, "rural": true}', 'https://images.unsplash.com/photo-1552053831-71594a27632d?q=80&w=1000', 2, 'available', 'Buddy is a happy-go-lucky retriever who loves swimming and belly rubs.', 0),
+(2, 'Mittens', 'Cat', 'Tabby', '1 year', 'Female', 'Small', 'low', '["Quiet", "Independent", "Affectionate"]', '{"cats": true, "dogs": false, "kids": true}', '{"apartment": true, "house_large": true, "rural": false}', 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?q=80&w=1000', 2, 'available', 'Mittens is a gentle soul looking for a quiet sunny spot to nap.', 0),
+(3, 'Rex', 'Dog', 'German Shepherd Mix', '3 years', 'Male', 'Large', 'athletic', '["Loyal", "Protective", "Smart"]', '{"cats": false, "dogs": true, "kids": false}', '{"apartment": false, "house_large": true, "rural": true}', 'https://images.unsplash.com/photo-1589941013453-ec89f33b5e95?q=80&w=1000', 2, 'available', 'Rex is a smart, protective dog who needs an experienced hand.', 1);
 
--- Pending Users Table
-CREATE TABLE IF NOT EXISTS pending_users (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(255),
-    email VARCHAR(255),
-    password_hash VARCHAR(255),
-    phone_number VARCHAR(20),
-    nic VARCHAR(20),
-    otp_hash VARCHAR(255),
-    otp_expires_at DATETIME,
-    role VARCHAR(20) DEFAULT 'adopter',
-    shelter_name VARCHAR(255),
-    is_verified BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+-- 6. Seed Adoptions (Linked to Adopter 3 and Pet 1)
+INSERT INTO `adoptions` (id, user_id, pet_id, status, is_status_read) VALUES
+(1, 3, 1, 'active', 1);
 
--- Shelter Messages Table
-CREATE TABLE IF NOT EXISTS shelter_messages (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT,
-    adoption_id INT,
-    shelter_id INT,
-    subject VARCHAR(255),
-    message TEXT,
-    is_read TINYINT(1) DEFAULT 0,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    pet_id INT,
-    response TEXT,
-    responded_at DATETIME
-);
+-- 7. Seed Shelter Messages
+INSERT INTO `shelter_messages` (user_id, adoption_id, shelter_id, pet_id, subject, message, response, is_read, is_response_read) VALUES
+(3, 1, 2, 1, 'Follow up', 'Hi, Buddy is settling in well! Any specific food brands he likes?', 'Great to hear! He loves any salmon-based kibble.', 1, 1);
 
--- Shelter Visits Table
-CREATE TABLE IF NOT EXISTS shelter_visits (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT,
-    pet_id INT,
-    shelter_id INT,
-    visit_date DATE,
-    visit_time TIME,
-    status VARCHAR(50) DEFAULT 'pending', -- pending, confirmed, completed, cancelled
-    notes TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+-- 8. Seed Shelter Visits
+INSERT INTO `shelter_visits` (user_id, pet_id, shelter_id, visit_date, visit_time, status, notes) VALUES
+(3, 2, 2, CURDATE() + INTERVAL 2 DAY, '10:30:00', 'scheduled', 'Jane wants to meet Mittens.');
 
--- Seed Data for Animal Reports
-INSERT INTO animal_reports (animal_type, condition_type, location, description, contact_name, contact_phone, status) VALUES
-('Dog', 'Injured', 'Mount Lavinia Beach', 'Brown dog with a limp on the left hind leg.', 'Saman Kumara', '0771234567', 'pending'),
-('Cat', 'Abandoned', 'Dehiwala Zoo Road', 'Kittens left in a box near the entrance.', 'Nimal Perera', '0719876543', 'investigating');
+-- 9. Seed Welfare Logs (Linked to Adoption 1)
+INSERT INTO `welfare_logs` (adoption_id, mood, notes, risk_flagged, status) VALUES
+(1, 'Happy', 'Eating well and playing in the garden.', 0, 'approved');
 
--- Seed Data for Shelter Visits
-INSERT INTO shelter_visits (user_id, pet_id, shelter_id, visit_date, visit_time, status, notes) VALUES
-(1, 1, 1, '2023-10-25', '10:00:00', 'confirmed', 'First time meeting Bruno'),
-(1, 2, 1, '2023-10-26', '14:30:00', 'pending', 'Interested in Luna');
+-- 10. Seed Activity Logs
+INSERT INTO `activity_logs` (user_id, action_type, details) VALUES
+(3, 'ADOPTION_APPLICATION', '{"petId": 1, "adoptionId": 1}'),
+(2, 'PET_ADDED', '{"petId": 1, "name": "Buddy"}');
+
+-- 11. Seed Animal Reports
+INSERT INTO `animal_reports` (animal_type, condition_type, location, description, contact_name, contact_phone, status) VALUES
+('Dog', 'Injured', 'Main St Junction', 'Found a dog with an injured paw.', 'Anonymous', '00000000', 'pending');
