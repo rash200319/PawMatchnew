@@ -5,55 +5,85 @@ import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Heart, MapPin } from "lucide-react"
 import Link from "next/link"
-
-const fosterPets = [
-  {
-    id: 1,
-    name: "Luna",
-    breed: "Mixed Breed",
-    age: "2 years",
-    location: "Colombo",
-    image: "https://res.cloudinary.com/dd58qgsfx/image/upload/v1770356664/pawmatch/static/zc6enktpeo4fvn6n4evj.jpg",
-    compatibility: 95,
-    traits: ["Calm", "Good with kids", "House trained"],
-  },
-  {
-    id: 2,
-    name: "Rocky",
-    breed: "Local Breed",
-    age: "1 year",
-    location: "Kandy",
-    image: "https://res.cloudinary.com/dd58qgsfx/image/upload/v1770356662/pawmatch/static/f2knlxfmyo5mzhqaz3lp.jpg",
-    compatibility: 88,
-    traits: ["Energetic", "Loves walks", "Social"],
-  },
-  {
-    id: 3,
-    name: "Bella",
-    breed: "Mixed Breed",
-    age: "3 years",
-    location: "Galle",
-    image: "https://res.cloudinary.com/dd58qgsfx/image/upload/v1770356681/pawmatch/static/o5qc2jpoqjiet0bq9i7a.jpg",
-    compatibility: 92,
-    traits: ["Gentle", "Senior-friendly", "Quiet"],
-  },
-]
-
 import { useState, useEffect } from "react"
 import { toast } from "sonner"
+import { useAuth } from "@/components/providers/auth-provider"
+import { cn } from "@/lib/utils"
 
 export function FosterPetsSection() {
   const [pets, setPets] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [hasQuizResults, setHasQuizResults] = useState(false)
+  const { user, isLoading: isAuthLoading } = useAuth()
 
   useEffect(() => {
+    if (isAuthLoading) return;
+
     const fetchFosterPets = async () => {
       try {
         const res = await fetch('/api/pets?is_foster=true&status=available')
         const data = await res.json()
-        if (data.success) {
-          setPets(data.pets)
+
+        if (!data.success) {
+          throw new Error('Failed to fetch pets')
         }
+
+        // Check for quiz results and their expiration
+        let quizScores: Map<number, { score: number, reasons: string[] }> = new Map()
+        let hasValidQuiz = false
+
+        const storedMatches = localStorage.getItem('pawmatch_matches')
+        const quizTimestamp = localStorage.getItem('pawmatch_quiz_timestamp')
+        const storedUserId = localStorage.getItem('pawmatch_quiz_user_id') || ''
+
+        // Strict validation: localStorage user ID must match current user ID (or both empty for guest)
+        const currentUserId = user ? user.id.toString() : ''
+        const canUseQuiz = storedUserId === currentUserId
+
+        if (storedMatches && quizTimestamp && canUseQuiz) {
+          const timestamp = parseInt(quizTimestamp)
+          const oneHourInMs = 60 * 60 * 1000 // 1 hour
+          const now = Date.now()
+
+          // Check if quiz results are still valid (less than 1 hour old)
+          if (now - timestamp < oneHourInMs) {
+            try {
+              const parsedMatches = JSON.parse(storedMatches)
+              if (parsedMatches && Array.isArray(parsedMatches)) {
+                // Create a map of pet ID to quiz scores
+                parsedMatches.forEach((m: any) => {
+                  quizScores.set(m.id, {
+                    score: m.matchScore || 0,
+                    reasons: m.matchReasons || []
+                  })
+                })
+                hasValidQuiz = true
+              }
+            } catch (e) {
+              console.error('Error parsing quiz results:', e)
+            }
+          }
+        }
+
+        // Map all pets and merge with quiz scores if available
+        const allPets = data.pets.map((m: any) => {
+          // Get quiz score for this pet if available
+          const quizData = quizScores.get(m.id)
+
+          return {
+            ...m,
+            compatibility: quizData ? quizData.score : 0,
+          }
+        })
+
+        // Sort by compatibility score (descending)
+        if (hasValidQuiz) {
+          allPets.sort((a: any, b: any) => b.compatibility - a.compatibility)
+        }
+
+        setPets(allPets)
+        setHasQuizResults(hasValidQuiz)
+
       } catch (err) {
         console.error("Foster pets fetch error:", err)
         toast.error("Failed to load foster pets")
@@ -62,7 +92,7 @@ export function FosterPetsSection() {
       }
     }
     fetchFosterPets()
-  }, [])
+  }, [user, isAuthLoading])
 
   return (
     <section id="foster-pets" className="py-20 bg-background">
@@ -85,11 +115,33 @@ export function FosterPetsSection() {
         ) : pets.length > 0 ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {pets.map((pet) => (
-              <Card key={pet.id} className="overflow-hidden hover:shadow-xl transition-shadow flex flex-col h-full">
-                <div className="relative aspect-square">
-                  <img src={pet.profile_image_url || "/placeholder.svg"} alt={pet.name} className="w-full h-full object-cover" />
-                  <div className="absolute top-4 left-4">
-                    <Badge className="bg-accent text-accent-foreground">Foster to Adopt</Badge>
+              <Card key={pet.id} className="overflow-hidden hover:shadow-xl transition-shadow flex flex-col h-full group">
+                <div className="relative aspect-square overflow-hidden">
+                  <img
+                    src={pet.profile_image_url || "/placeholder.svg"}
+                    alt={pet.name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+
+                  <div className="absolute top-4 left-4 flex flex-col gap-2">
+                    <Badge className="bg-orange-500 text-white border-none">Foster to Adopt</Badge>
+
+                    {hasQuizResults && (
+                      <Badge
+                        className={cn(
+                          "text-sm font-semibold",
+                          pet.compatibility === 0
+                            ? "bg-muted text-muted-foreground"
+                            : pet.compatibility >= 90
+                              ? "bg-accent text-accent-foreground"
+                              : pet.compatibility >= 80
+                                ? "bg-primary text-primary-foreground"
+                                : "bg-secondary text-secondary-foreground"
+                        )}
+                      >
+                        {pet.compatibility}% Match
+                      </Badge>
+                    )}
                   </div>
                 </div>
 
