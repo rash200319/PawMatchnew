@@ -239,25 +239,37 @@ exports.getShelterPublicProfile = async (req, res) => {
         }
 
         const data = rows[0];
+        console.log(`Debug: Fetching profile for ID ${id}. Found row keys:`, Object.keys(data));
+        console.log(`Debug: organization_name: "${data.organization_name}", user_name: "${data.user_name}"`);
+
+        // Helper to filter out literal "null" strings or real nulls
+        const clean = (val, fallback = "") => {
+            if (val === null || val === undefined || val === "null" || val === "NULL" || val === "") {
+                return fallback;
+            }
+            return val;
+        };
 
         // Manual robust mapping with fallbacks
         const shelter = {
             id: data.id,
             email: data.email,
             role: data.role,
-            shelter_name: data.organization_name || data.user_shelter_name || data.user_name || "Shelter",
-            phone_number: data.contact_number || data.user_phone || "Not provided",
-            shelter_description: data.shelter_description || data.user_description || "",
-            shelter_address: data.shelter_address || data.user_address || "Address not provided",
-            shelter_logo_url: data.shelter_logo_url,
-            shelter_banner_url: data.shelter_banner_url,
-            shelter_social_links: data.shelter_social_links,
-            shelter_website: data.shelter_website,
-            shelter_tagline: data.shelter_tagline,
-            verification_status: data.verification_status || 'pending',
+            shelter_name: clean(data.organization_name) || clean(data.user_shelter_name) || clean(data.user_name) || "Shelter",
+            phone_number: clean(data.contact_number) || clean(data.user_phone) || "Not provided",
+            shelter_description: clean(data.shelter_description) || clean(data.user_description) || "",
+            shelter_address: clean(data.shelter_address) || clean(data.user_address) || "Address not provided",
+            shelter_logo_url: clean(data.shelter_logo_url),
+            shelter_banner_url: clean(data.shelter_banner_url),
+            shelter_social_links: data.shelter_social_links, // Keep object if it is one
+            shelter_website: clean(data.shelter_website),
+            shelter_tagline: clean(data.shelter_tagline),
+            verification_status: clean(data.verification_status, 'pending'),
             created_at: data.shelter_joined || data.user_joined || new Date().toISOString(),
             adoption_count: data.adoptions || 0
         };
+
+        console.log(`Debug: Mapped shelter_name: ${shelter.shelter_name}`);
 
         // 2. Get Available Pets for this Shelter
         const petsRes = await db.query(`
