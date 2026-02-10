@@ -239,7 +239,14 @@ exports.getShelterPublicProfile = async (req, res) => {
         }
 
         const data = rows[0];
-        console.log(`[ShelterProfile] ID: ${id} | Found organization_name: ${data.organization_name} | contact: ${data.contact_number}`);
+
+        // Debug: Log raw database values
+        console.log(`[DEBUG] Raw DB data for shelter ${id}:`);
+        console.log(`  - s.organization_name: "${data.organization_name}"`);
+        console.log(`  - s.contact_number: "${data.contact_number}"`);
+        console.log(`  - s.shelter_address: "${data.shelter_address}"`);
+        console.log(`  - u.name: "${data.user_name}"`);
+        console.log(`  - u.phone_number: "${data.user_phone}"`);
 
         // Helper to filter out literal "null" strings or real nulls
         const clean = (val, fallback = "") => {
@@ -249,18 +256,22 @@ exports.getShelterPublicProfile = async (req, res) => {
             return val;
         };
 
-        // Manual robust mapping with fallbacks (Strictly favoring shelters table)
+        // Build shelter object with strict priority: shelters table first, users table as fallback
         const shelter = {
             id: data.id,
             email: data.email,
             role: data.role,
-            // Strictly fetch from organization_name
-            shelter_name: clean(data.organization_name) || "Shelter",
-            // Strictly fetch from contact_number
-            phone_number: clean(data.contact_number) || "Not provided",
-            // Strictly fetch from shelter_address
-            shelter_address: clean(data.shelter_address) || "Address not provided",
 
+            // Name: shelters.organization_name > users.shelter_name > users.name > "Shelter"
+            shelter_name: clean(data.organization_name) || clean(data.user_shelter_name) || clean(data.user_name) || "Shelter",
+
+            // Phone: shelters.contact_number > users.phone_number > "Not provided"
+            phone_number: clean(data.contact_number) || clean(data.user_phone) || "Not provided",
+
+            // Address: shelters.shelter_address > users.shelter_address > "Address not provided"
+            shelter_address: clean(data.shelter_address) || clean(data.user_address) || "Address not provided",
+
+            // Other fields
             shelter_description: clean(data.shelter_description) || clean(data.user_description) || "",
             shelter_logo_url: clean(data.shelter_logo_url),
             shelter_banner_url: clean(data.shelter_banner_url),
@@ -272,18 +283,10 @@ exports.getShelterPublicProfile = async (req, res) => {
             adoption_count: data.adoptions || 0
         };
 
-        // Final fallback to user fields ONLY if shelter fields are strictly missing
-        if (shelter.shelter_name === "Shelter" && clean(data.user_shelter_name)) {
-            shelter.shelter_name = data.user_shelter_name;
-        }
-        if (shelter.phone_number === "Not provided" && clean(data.user_phone)) {
-            shelter.phone_number = data.user_phone;
-        }
-        if (shelter.shelter_address === "Address not provided" && clean(data.user_address)) {
-            shelter.shelter_address = data.user_address;
-        }
-
-        console.log(`[ShelterProfile] Sending: ${shelter.shelter_name} | ${shelter.phone_number}`);
+        console.log(`[DEBUG] Final shelter object:`);
+        console.log(`  - shelter_name: "${shelter.shelter_name}"`);
+        console.log(`  - phone_number: "${shelter.phone_number}"`);
+        console.log(`  - shelter_address: "${shelter.shelter_address}"`);
 
         // 2. Get Available Pets for this Shelter
         const petsRes = await db.query(`
