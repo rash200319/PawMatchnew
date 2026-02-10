@@ -20,7 +20,8 @@ export function VerifyShelterCard({ status, userId, onVerificationSubmitted }: V
     const [file, setFile] = useState<File | null>(null)
     const [formData, setFormData] = useState({
         registry_type: "",
-        registration_number: ""
+        registration_number: "",
+        shelter_address: ""
     })
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -31,7 +32,7 @@ export function VerifyShelterCard({ status, userId, onVerificationSubmitted }: V
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
-        if (!file || !formData.registry_type || !formData.registration_number) {
+        if (!file || !formData.registry_type || !formData.registration_number || !formData.shelter_address) {
             alert("Please fill all fields and upload document")
             return
         }
@@ -42,6 +43,7 @@ export function VerifyShelterCard({ status, userId, onVerificationSubmitted }: V
             data.append('userId', userId.toString())
             data.append('registry_type', formData.registry_type)
             data.append('registration_number', formData.registration_number)
+            data.append('shelter_address', formData.shelter_address)
             data.append('document', file)
 
             const token = sessionStorage.getItem('token');
@@ -100,11 +102,11 @@ export function VerifyShelterCard({ status, userId, onVerificationSubmitted }: V
         <Card className="border-l-4 border-l-primary shadow-md">
             <CardHeader>
                 <div className="flex items-center justify-between">
-                    <CardTitle>Get Verified</CardTitle>
+                    <CardTitle>Verify Your Shelter</CardTitle>
                     {status === 'rejected' && <Badge variant="destructive">Previously Rejected</Badge>}
                 </div>
                 <CardDescription>
-                    Verify your shelter to unlock all platform features and build trust with adopters.
+                    Submit your legal registration details to become a verified partner.
                 </CardDescription>
             </CardHeader>
             <CardContent>
@@ -119,6 +121,8 @@ export function VerifyShelterCard({ status, userId, onVerificationSubmitted }: V
                                 <SelectContent>
                                     <SelectItem value="NGO Secretariat">NGO Secretariat</SelectItem>
                                     <SelectItem value="Department of Animal Production & Health">Department of Animal Production & Health</SelectItem>
+                                    <SelectItem value="Provincial Council">Provincial Council</SelectItem>
+                                    <SelectItem value="Local Government">Local Government</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
@@ -133,11 +137,33 @@ export function VerifyShelterCard({ status, userId, onVerificationSubmitted }: V
                     </div>
 
                     <div className="space-y-2">
-                        <Label>Certificate of Registration (PDF or Image)</Label>
-                        <Input type="file" accept=".pdf,image/*" onChange={handleFileChange} />
+                        <Label htmlFor="shelter_address">Physical Address</Label>
+                        <Input
+                            id="shelter_address"
+                            placeholder="Full address of your facility"
+                            value={formData.shelter_address}
+                            onChange={(e) => setFormData(docs => ({ ...docs, shelter_address: e.target.value }))}
+                            required
+                        />
                     </div>
 
-                    <Button type="submit" disabled={isLoading} className="w-full sm:w-auto">
+                    <div className="space-y-2">
+                        <Label>Certificate of Registration (PDF or Image)</Label>
+                        <div className="flex items-center gap-2">
+                            <Input type="file" accept=".pdf,image/*" onChange={handleFileChange} className="hidden" id="doc-upload" />
+                            <Label
+                                htmlFor="doc-upload"
+                                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
+                            >
+                                <Upload className="w-4 h-4 text-muted-foreground" />
+                                <span className="text-sm text-muted-foreground">
+                                    {file ? file.name : "Click to upload registration document"}
+                                </span>
+                            </Label>
+                        </div>
+                    </div>
+
+                    <Button type="submit" disabled={isLoading} className="w-full">
                         {isLoading ? "Submitting..." : "Submit for Verification"}
                     </Button>
                 </form>
