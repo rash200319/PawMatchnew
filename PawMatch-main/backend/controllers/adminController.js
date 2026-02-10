@@ -8,7 +8,7 @@ exports.uploadVerificationDoc = upload.single('document');
 
 exports.submitVerification = async (req, res) => {
     try {
-        const { registry_type, registration_number } = req.body;
+        const { registry_type, registration_number, shelter_address } = req.body;
         const idToUpdate = req.user.id;
 
         if (!req.file) {
@@ -19,13 +19,13 @@ exports.submitVerification = async (req, res) => {
 
         // Update both tables to maintain consistency
         await db.query(
-            "UPDATE users SET registry_type = ?, registration_number = ?, verification_document_url = ?, verification_status = 'pending' WHERE id = ?",
-            [registry_type, registration_number, docUrl, idToUpdate]
+            "UPDATE users SET registry_type = ?, registration_number = ?, verification_document_url = ?, shelter_address = ?, verification_status = 'pending' WHERE id = ?",
+            [registry_type, registration_number, docUrl, shelter_address, idToUpdate]
         );
 
         await db.query(
-            "UPDATE shelters SET registry_type = ?, registration_number = ?, verification_document_url = ?, verification_status = 'pending' WHERE user_id = ?",
-            [registry_type, registration_number, docUrl, idToUpdate]
+            "UPDATE shelters SET registry_type = ?, registration_number = ?, verification_document_url = ?, shelter_address = ?, verification_status = 'pending' WHERE user_id = ?",
+            [registry_type, registration_number, docUrl, shelter_address, idToUpdate]
         );
 
         res.json({ success: true, message: "Verification submitted successfully", verification_status: 'pending' });
