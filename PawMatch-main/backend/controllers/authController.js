@@ -343,10 +343,11 @@ exports.login = async (req, res) => {
             const profileRes = await db.query('SELECT organization_name, verification_status, shelter_logo_url FROM shelters WHERE user_id = ?', [user.id]);
             const profileRows = profileRes.rows || profileRes;
             if (profileRows.length > 0) {
-                profileName = profileRows[0].organization_name;
-                extraData.shelter_name = profileRows[0].organization_name;
-                extraData.verification_status = profileRows[0].verification_status;
-                extraData.shelter_logo_url = profileRows[0].shelter_logo_url;
+                const p = profileRows[0];
+                profileName = p.organization_name || user.name || "Shelter";
+                extraData.shelter_name = p.organization_name || user.name || "Shelter";
+                extraData.verification_status = p.verification_status;
+                extraData.shelter_logo_url = p.shelter_logo_url;
             }
         } else if (user.role === 'admin') {
             const profileRes = await db.query('SELECT full_name FROM admins WHERE user_id = ?', [user.id]);
@@ -415,9 +416,9 @@ exports.getMe = async (req, res) => {
             if (pRows.length > 0) {
                 const p = pRows[0];
                 profile = {
-                    name: p.organization_name,
-                    shelter_name: p.organization_name,
-                    phone_number: p.contact_number,
+                    name: p.organization_name || user.name || "Shelter",
+                    shelter_name: p.organization_name || user.name || "Shelter",
+                    phone_number: p.contact_number || user.phone_number,
                     verification_status: p.verification_status,
                     registration_number: p.registration_number,
                     shelter_code: p.shelter_code,
