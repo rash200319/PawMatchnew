@@ -133,9 +133,9 @@ exports.getUserMessages = async (req, res) => {
     try {
         const userId = req.user.id;
         const resMsg = await db.query(`
-            SELECT m.*, s.shelter_name as shelter_name, p.name as pet_name, p.image_url as pet_image
+            SELECT m.*, sh.organization_name as shelter_name, p.name as pet_name, p.image_url as pet_image
             FROM shelter_messages m 
-            JOIN users s ON m.shelter_id = s.id 
+            JOIN shelters sh ON m.shelter_id = sh.user_id 
             JOIN pets p ON m.pet_id = p.id 
             WHERE m.user_id = ?
             ORDER BY m.created_at DESC
@@ -208,12 +208,15 @@ exports.getShelterPublicProfile = async (req, res) => {
         // 1. Get Shelter Details
         const shelterRes = await db.query(`
             SELECT 
-                id, name, email, phone_number, role, shelter_name, 
-                shelter_description, shelter_address, shelter_logo_url, 
-                shelter_banner_url, shelter_social_links, shelter_website, 
-                shelter_tagline, verification_status 
-            FROM users 
-            WHERE id = ? AND role = 'shelter'
+                u.id, u.name, u.email, u.phone_number, u.role, 
+                s.organization_name as shelter_name, 
+                s.shelter_description, s.shelter_address, s.shelter_logo_url, 
+                s.shelter_banner_url, s.shelter_social_links, s.shelter_website, 
+                s.shelter_tagline, 
+                s.verification_status 
+            FROM users u
+            JOIN shelters s ON u.id = s.user_id
+            WHERE u.id = ? AND u.role = 'shelter'
         `, [id]);
 
         const shelters = shelterRes.rows || shelterRes;
