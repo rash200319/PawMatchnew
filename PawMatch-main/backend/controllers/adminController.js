@@ -41,7 +41,7 @@ exports.getPendingShelters = async (req, res) => {
         const query = `
             SELECT 
                 u.id, u.name, u.email, 
-                s.organization_name as shelter_name, 
+                COALESCE(s.organization_name, u.shelter_name, u.name) as shelter_name, 
                 s.shelter_code, s.shelter_slug, s.shelter_address, 
                 s.registry_type, s.registration_number, s.verification_document_url, 
                 s.created_at 
@@ -112,7 +112,7 @@ exports.getAllShelters = async (req, res) => {
         const query = `
             SELECT 
                 u.id, u.name, u.email, 
-                s.organization_name as shelter_name, 
+                COALESCE(s.organization_name, u.shelter_name, u.name) as shelter_name, 
                 s.shelter_code, s.shelter_slug, 
                 s.shelter_address, 
                 s.verification_status, 
