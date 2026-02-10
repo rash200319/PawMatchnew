@@ -145,12 +145,14 @@ export default function ShelterProfilePage() {
                                 </Card>
                                 <Card className="p-4 text-center border-none bg-orange-500/5">
                                     <Calendar className="w-6 h-6 text-orange-500 mx-auto mb-2" />
-                                    <p className="text-2xl font-bold text-orange-500">10+</p>
+                                    <p className="text-2xl font-bold text-orange-500">
+                                        {Math.max(1, new Date().getFullYear() - new Date(shelter.created_at).getFullYear() + 1)}
+                                    </p>
                                     <p className="text-xs text-muted-foreground uppercase font-semibold">Years Active</p>
                                 </Card>
                                 <Card className="p-4 text-center border-none bg-green-500/5">
                                     <CheckCircle2 className="w-6 h-6 text-green-500 mx-auto mb-2" />
-                                    <p className="text-2xl font-bold text-green-500">500+</p>
+                                    <p className="text-2xl font-bold text-green-500">{shelter.adoption_count || 0}</p>
                                     <p className="text-xs text-muted-foreground uppercase font-semibold">Adoptions</p>
                                 </Card>
                                 <Card className="p-4 text-center border-none bg-indigo-500/5">
@@ -325,11 +327,13 @@ export default function ShelterProfilePage() {
                             </Card>
 
                             {/* Verified Badge Detail */}
-                            <div className="bg-blue-500/5 border border-blue-500/10 rounded-xl p-6 text-center">
-                                <CheckCircle2 className="w-10 h-10 text-blue-500 mx-auto mb-3" />
-                                <h4 className="font-bold text-foreground">PawMatch Verified</h4>
-                                <p className="text-sm text-muted-foreground">This shelter has completed our identity verification and facility check process.</p>
-                            </div>
+                            {shelter.verification_status === 'verified' && (
+                                <div className="bg-blue-500/5 border border-blue-500/10 rounded-xl p-6 text-center">
+                                    <CheckCircle2 className="w-10 h-10 text-blue-500 mx-auto mb-3" />
+                                    <h4 className="font-bold text-foreground">PawMatch Verified</h4>
+                                    <p className="text-sm text-muted-foreground">This shelter has completed our identity verification and facility check process.</p>
+                                </div>
+                            )}
 
                         </div>
 
