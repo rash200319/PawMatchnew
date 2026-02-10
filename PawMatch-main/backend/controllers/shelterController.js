@@ -205,18 +205,18 @@ exports.getShelterPublicProfile = async (req, res) => {
     try {
         const { id } = req.params;
 
-        // 1. Get Shelter Details
         const shelterRes = await db.query(`
             SELECT 
-                u.id, u.name, u.email, u.phone_number, u.role, 
-                s.organization_name as shelter_name, 
+                u.id, u.name, u.email, u.role, 
+                COALESCE(s.organization_name, u.shelter_name, u.name) as shelter_name, 
+                COALESCE(s.contact_number, u.phone_number) as phone_number,
                 s.shelter_description, s.shelter_address, s.shelter_logo_url, 
                 s.shelter_banner_url, s.shelter_social_links, s.shelter_website, 
                 s.shelter_tagline, 
                 s.verification_status 
             FROM users u
             JOIN shelters s ON u.id = s.user_id
-            WHERE u.id = ? AND u.role = 'shelter'
+            WHERE u.id = ?
         `, [id]);
 
         const shelters = shelterRes.rows || shelterRes;
