@@ -22,6 +22,7 @@ import {
     Shield,
     Activity,
     Clock,
+    RefreshCw,
 } from "lucide-react"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
@@ -130,6 +131,17 @@ export function ProfilePage() {
         }
     }, [user, isLoading, router])
 
+    // Auto-refresh activity logs every 30 seconds
+    useEffect(() => {
+        if (!user || !token) return
+
+        const interval = setInterval(() => {
+            fetchActivityLogs()
+        }, 30000) // 30 seconds
+
+        return () => clearInterval(interval)
+    }, [user, token])
+
     const handleUpdateProfile = async (e: React.FormEvent) => {
         e.preventDefault()
         if (!user || !token) return
@@ -151,6 +163,8 @@ export function ProfilePage() {
                 refreshUser(data.user)
                 toast.success("Profile updated successfully")
                 setIsEditModalOpen(false)
+                // Refresh activity logs to show the profile update
+                fetchActivityLogs()
             } else {
                 toast.error(data.error || "Failed to update profile")
             }
@@ -273,6 +287,8 @@ export function ProfilePage() {
                 toast.success("Visit rescheduled successfully")
                 setIsEditVisitModalOpen(false)
                 fetchVisits()
+                // Refresh activity logs to show the rescheduling
+                fetchActivityLogs()
             } else {
                 toast.error(data.error || "Failed to update visit")
             }
@@ -293,6 +309,8 @@ export function ProfilePage() {
             if (data.success) {
                 toast.success("Visit cancelled successfully")
                 fetchVisits()
+                // Refresh activity logs to show the cancellation
+                fetchActivityLogs()
             } else {
                 toast.error(data.error || "Failed to cancel visit")
             }
@@ -303,14 +321,24 @@ export function ProfilePage() {
 
     const getActivityMessage = (log: ActivityLog) => {
         switch (log.action_type) {
+            case 'REGISTRATION':
+                return "Account created and verified"
+            case 'LOGIN':
+                return "Logged into account"
             case 'ADOPTION_APPLICATION':
                 return "Submitted an adoption application"
             case 'VISIT_SCHEDULED':
                 return `Scheduled a shelter visit for ${log.details?.date}`
+            case 'VISIT_RESCHEDULED':
+                return `Rescheduled shelter visit to ${log.details?.newDate}`
+            case 'VISIT_CANCELLED':
+                return `Cancelled shelter visit for ${log.details?.date}`
             case 'PROFILE_UPDATE':
                 return "Updated profile details"
-            case 'PASSWORD_CHANGE':
+            case 'PASSWORD_UPDATE':
                 return "Changed account password"
+            case 'PASSWORD_RESET':
+                return "Reset account password"
             default:
                 return log.action_type.replace(/_/g, ' ').toLowerCase()
         }
