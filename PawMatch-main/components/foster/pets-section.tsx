@@ -161,11 +161,23 @@ export function FosterPetsSection() {
                   </div>
 
                   <div className="flex flex-wrap gap-2 mb-6">
-                    {(typeof pet.temperament === 'string' ? JSON.parse(pet.temperament) : (pet.temperament || [])).slice(0, 3).map((trait: string, index: number) => (
-                      <Badge key={index} variant="secondary">
-                        {trait}
-                      </Badge>
-                    ))}
+                    {(() => {
+                      let temperamentTraits = [];
+                      try {
+                        temperamentTraits = typeof pet.temperament === 'string' ? JSON.parse(pet.temperament) : (pet.temperament || []);
+                        if (!Array.isArray(temperamentTraits)) {
+                          temperamentTraits = [];
+                        }
+                      } catch (error) {
+                        console.warn('Error parsing temperament:', error);
+                        temperamentTraits = [];
+                      }
+                      return temperamentTraits.slice(0, 3).map((trait: string, index: number) => (
+                        <Badge key={index} variant="secondary">
+                          {trait}
+                        </Badge>
+                      ));
+                    })()}
                   </div>
 
                   <div className="mt-auto">
