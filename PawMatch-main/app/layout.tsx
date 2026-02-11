@@ -13,21 +13,8 @@ export const metadata: Metadata = {
     "Find your perfect furry companion through data-driven compatibility matching. Reduce adoption returns and ensure lifelong bonds.",
   generator: "v0.app",
   icons: {
-    icon: [
-      {
-        url: "https://res.cloudinary.com/dd58qgsfx/image/upload/v1770356671/pawmatch/static/gqzpethjvle8jcvnjrrk.png",
-        media: "(prefers-color-scheme: light)",
-      },
-      {
-        url: "https://res.cloudinary.com/dd58qgsfx/image/upload/v1770356670/pawmatch/static/es5wiyhtaaclfgoyt4of.png",
-        media: "(prefers-color-scheme: dark)",
-      },
-      {
-        url: "/icon.svg",
-        type: "image/svg+xml",
-      },
-    ],
-    apple: "https://res.cloudinary.com/dd58qgsfx/image/upload/v1770356655/pawmatch/static/rqqhy9ayvmi8uavk7fqg.png",
+    icon: "/favicon.png",
+    apple: "/favicon.png",
   },
 }
 
