@@ -600,7 +600,7 @@ export function ProfilePage() {
                                                     <div>
                                                         <h3 className="font-semibold">Visit for {visit.pet_name}</h3>
                                                         <p className="text-sm text-muted-foreground">
-                                                            {new Date(visit.visit_date).toLocaleDateString()} at {visit.visit_time.slice(0, 5)}
+                                                            {new Date(visit.visit_date).toLocaleDateString()} at {(visit.visit_time || '').toString().slice(0, 5)}
                                                         </p>
                                                         {visit.notes && <p className="text-xs text-muted-foreground mt-1 italic">"{visit.notes}"</p>}
                                                     </div>
