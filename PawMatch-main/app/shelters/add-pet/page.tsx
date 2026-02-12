@@ -10,13 +10,15 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Upload, X, Dog, CheckCircle } from "lucide-react"
+import { Upload, X, Dog, CheckCircle, AlertCircle, Shield } from "lucide-react"
 import { useAuth } from "@/components/providers/auth-provider"
 
 export default function AddPetPage() {
     const router = useRouter()
     const { user, token, isLoading: authLoading } = useAuth()
     const [isLoading, setIsLoading] = useState(false)
+    const [verificationStatus, setVerificationStatus] = useState<string>('unverified')
+    const [isCheckingVerification, setIsCheckingVerification] = useState(false)
     const [imagePreview, setImagePreview] = useState<string | null>(null)
     const [formData, setFormData] = useState({
         name: "",
@@ -47,12 +49,104 @@ export default function AddPetPage() {
         }
     }, [user, authLoading, router])
 
-    if (authLoading) {
+    // Fetch verification status
+    const fetchVerificationStatus = async () => {
+        if (!user?.id || !token) return;
+        
+        setIsCheckingVerification(true);
+        try {
+            const res = await fetch('/api/me', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            
+            if (res.ok) {
+                const data = await res.json();
+                if (data.user?.verification_status) {
+                    setVerificationStatus(data.user.verification_status);
+                }
+            }
+        } catch (e) {
+            console.error('Failed to fetch verification status:', e);
+        } finally {
+            setIsCheckingVerification(false);
+        }
+    };
+
+    useEffect(() => {
+        if (user && token && !authLoading) {
+            fetchVerificationStatus();
+        }
+    }, [user, token, authLoading]);
+
+    if (authLoading || isCheckingVerification) {
         return <div className="min-h-screen flex items-center justify-center bg-muted/30">Loading...</div>
     }
 
     if (!user || user.role !== 'shelter') {
         return null
+    }
+
+    // Check if shelter is verified
+    if (verificationStatus !== 'verified') {
+        return (
+            <div className="min-h-screen bg-muted/30">
+                <Navigation />
+                <main className="pt-24 pb-12 px-4 sm:px-6 lg:px-8">
+                    <div className="max-w-3xl mx-auto">
+                        <Card className="border-l-4 border-l-amber-500">
+                            <CardHeader>
+                                <div className="flex items-center gap-3">
+                                    <Shield className="w-8 h-8 text-amber-500" />
+                                    <div>
+                                        <CardTitle className="text-amber-800">Verification Required</CardTitle>
+                                        <CardDescription className="text-amber-700">
+                                            Your shelter must be verified before you can add pets to the system.
+                                        </CardDescription>
+                                    </div>
+                                </div>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                                    <div className="flex items-start gap-3">
+                                        <AlertCircle className="w-5 h-5 text-amber-600 mt-0.5" />
+                                        <div>
+                                            <p className="text-sm font-medium text-amber-800 mb-2">
+                                                Current Status: {verificationStatus === 'pending' ? 'Verification Pending' : 'Not Verified'}
+                                            </p>
+                                            <p className="text-sm text-amber-700">
+                                                {verificationStatus === 'pending' 
+                                                    ? 'Your verification is currently under review. This typically takes 24-48 hours.'
+                                                    : 'Please complete the verification process to unlock pet listing features.'
+                                                }
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div className="flex gap-3">
+                                    <Button 
+                                        variant="outline" 
+                                        onClick={() => router.push('/shelters/dashboard')}
+                                        className="flex-1"
+                                    >
+                                        Back to Dashboard
+                                    </Button>
+                                    {verificationStatus === 'unverified' && (
+                                        <Button 
+                                            onClick={() => router.push('/shelters/dashboard')}
+                                            className="flex-1"
+                                        >
+                                            Complete Verification
+                                        </Button>
+                                    )}
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+                </main>
+                <Footer />
+            </div>
+        )
     }
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
