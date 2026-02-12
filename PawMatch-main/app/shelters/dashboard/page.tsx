@@ -48,8 +48,44 @@ export default function ShelterDashboardPage() {
         }
     }, [user])
 
+    // Fetch fresh verification status from database
+    const fetchVerificationStatus = async () => {
+        try {
+            const token = sessionStorage.getItem('token');
+            if (!token || !user?.id) return;
+            
+            const res = await fetch('/api/me', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            
+            if (res.ok) {
+                const data = await res.json();
+                if (data.user?.verification_status) {
+                    setVerificationStatus(data.user.verification_status);
+                    // Also update the user object if refreshUser is available
+                    if (refreshUser) {
+                        refreshUser({ ...user, ...data.user });
+                    }
+                }
+            }
+        } catch (e) {
+            console.error('Failed to fetch verification status:', e);
+        }
+    };
+
+    // Fetch verification status when component mounts
+    useEffect(() => {
+        if (user && !authLoading) {
+            fetchVerificationStatus();
+        }
+    }, [user, authLoading]);
+
     const handleVerificationSubmitted = () => {
         setVerificationStatus('pending')
+        // Refresh the user data to get the latest status
+        setTimeout(() => {
+            fetchVerificationStatus();
+        }, 1000);
     }
 
     const fetchPets = async () => {
@@ -240,6 +276,16 @@ export default function ShelterDashboardPage() {
                     {/* Verification Section */}
                     {verificationStatus !== 'verified' && (
                         <div className="mb-8">
+                            <div className="flex justify-end mb-2">
+                                <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    onClick={fetchVerificationStatus}
+                                    className="text-xs"
+                                >
+                                    Refresh Status
+                                </Button>
+                            </div>
                             <VerifyShelterCard
                                 status={verificationStatus}
                                 userId={user?.id || 0}
