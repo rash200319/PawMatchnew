@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Heart, MapPin, Calendar, SlidersHorizontal, Zap } from "lucide-react"
+import { Heart, MapPin, Calendar, Zap } from "lucide-react"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
@@ -107,7 +107,6 @@ const PetCard = ({ pet, showCompatibility, favorites, toggleFavorite }: { pet: a
 
 export function MatchesGrid() {
   const [favorites, setFavorites] = useState<number[]>([])
-  const [showFilters, setShowFilters] = useState(false)
   const [matches, setMatches] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [hasQuizResults, setHasQuizResults] = useState(false)
@@ -242,56 +241,9 @@ export function MatchesGrid() {
                 : "Explore all our wonderful pets waiting for a forever home."}
             </p>
           </div>
-          <Button variant="outline" onClick={() => setShowFilters(!showFilters)}>
-            <SlidersHorizontal className="w-4 h-4 mr-2" />
-            Filters
-          </Button>
         </div>
 
-        {/* Filters panel */}
-        {showFilters && (
-          <div className="bg-card border border-border rounded-xl p-6 mb-8">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div>
-                <label className="text-sm font-medium text-foreground mb-2 block">Age</label>
-                <select className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground">
-                  <option>Any age</option>
-                  <option>Puppy ({"<"}1 year)</option>
-                  <option>Young (1-3 years)</option>
-                  <option>Adult (3-7 years)</option>
-                  <option>Senior (7+ years)</option>
-                </select>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-foreground mb-2 block">Size</label>
-                <select className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground">
-                  <option>Any size</option>
-                  <option>Small</option>
-                  <option>Medium</option>
-                  <option>Large</option>
-                </select>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-foreground mb-2 block">Gender</label>
-                <select className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground">
-                  <option>Any</option>
-                  <option>Male</option>
-                  <option>Female</option>
-                </select>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-foreground mb-2 block">Location</label>
-                <select className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground">
-                  <option>All locations</option>
-                  <option>Colombo</option>
-                  <option>Kandy</option>
-                  <option>Galle</option>
-                </select>
-              </div>
-            </div>
-          </div>
-        )}
-
+        
         {/* Tabs and Matches grid */}
         <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="w-full">
           <div className="flex items-center justify-between mb-8">
