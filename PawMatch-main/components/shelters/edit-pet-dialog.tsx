@@ -16,6 +16,8 @@ import {
 } from "@/components/ui/dialog"
 import { Upload, X, CheckCircle } from "lucide-react"
 
+import { useAuth } from "@/components/providers/auth-provider"
+
 interface EditPetDialogProps {
     pet: any
     isOpen: boolean
@@ -24,6 +26,7 @@ interface EditPetDialogProps {
 }
 
 export function EditPetDialog({ pet, isOpen, onClose, onUpdate }: EditPetDialogProps) {
+    const { token } = useAuth()
     const [isLoading, setIsLoading] = useState(false)
     const [imagePreview, setImagePreview] = useState<string | null>(null)
     const [imageFile, setImageFile] = useState<File | null>(null)
@@ -96,6 +99,9 @@ export function EditPetDialog({ pet, isOpen, onClose, onUpdate }: EditPetDialogP
 
             const res = await fetch(`/api/pets/${pet.id}`, {
                 method: 'PUT',
+                headers: {
+                    'x-auth-token': token || ""
+                },
                 body: data,
             })
 
