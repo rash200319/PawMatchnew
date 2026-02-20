@@ -18,7 +18,6 @@ import { EditPetDialog } from "@/components/shelters/edit-pet-dialog"
 export default function ShelterDashboardPage() {
     const { user, refreshUser, isLoading: authLoading } = useAuth()
     const router = useRouter()
-    const [verificationStatus, setVerificationStatus] = useState<string>('unverified')
     const [pets, setPets] = useState<any[]>([])
     const [messages, setMessages] = useState<any[]>([])
     const [alerts, setAlerts] = useState<any[]>([])
@@ -42,50 +41,9 @@ export default function ShelterDashboardPage() {
     }, [user, authLoading, router])
 
     // Sync validation status from user object or fetch fresh
-    useEffect(() => {
-        if (user?.verification_status) {
-            setVerificationStatus(user.verification_status)
-        }
-    }, [user])
-
-    // Fetch fresh verification status from database
-    const fetchVerificationStatus = async () => {
-        try {
-            const token = sessionStorage.getItem('token');
-            if (!token || !user?.id) return;
-            
-            const res = await fetch('/api/me', {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            
-            if (res.ok) {
-                const data = await res.json();
-                if (data.user?.verification_status) {
-                    setVerificationStatus(data.user.verification_status);
-                    // Also update the user object if refreshUser is available
-                    if (refreshUser) {
-                        refreshUser({ ...user, ...data.user });
-                    }
-                }
-            }
-        } catch (e) {
-            console.error('Failed to fetch verification status:', e);
-        }
-    };
-
-    // Fetch verification status when component mounts
-    useEffect(() => {
-        if (user && !authLoading) {
-            fetchVerificationStatus();
-        }
-    }, [user, authLoading]);
-
     const handleVerificationSubmitted = () => {
-        setVerificationStatus('pending')
-        // Refresh the user data to get the latest status
-        setTimeout(() => {
-            fetchVerificationStatus();
-        }, 1000);
+        // Since getMe join ensures sync, the next refresh will pick it up
+        // We could also call a refreshUser if needed
     }
 
     const fetchPets = async () => {
@@ -265,7 +223,7 @@ export default function ShelterDashboardPage() {
                                 Welcome back, {user?.shelter_name || user?.name || "Partner"}
                             </p>
                         </div>
-                        <Button asChild disabled={verificationStatus !== 'verified'}>
+                        <Button asChild disabled={user?.verification_status !== 'verified'}>
                             <Link href="/shelters/add-pet">
                                 <Plus className="w-4 h-4 mr-2" />
                                 Add New Pet
@@ -274,20 +232,10 @@ export default function ShelterDashboardPage() {
                     </div>
 
                     {/* Verification Section */}
-                    {verificationStatus !== 'verified' && (
+                    {user?.verification_status !== 'verified' && (
                         <div className="mb-8">
-                            <div className="flex justify-end mb-2">
-                                <Button 
-                                    variant="ghost" 
-                                    size="sm" 
-                                    onClick={fetchVerificationStatus}
-                                    className="text-xs"
-                                >
-                                    Refresh Status
-                                </Button>
-                            </div>
                             <VerifyShelterCard
-                                status={verificationStatus}
+                                status={user?.verification_status || 'unverified'}
                                 userId={user?.id || 0}
                                 onVerificationSubmitted={handleVerificationSubmitted}
                             />
@@ -446,7 +394,12 @@ export default function ShelterDashboardPage() {
                                                         <span className={`px-4 py-1 text-xs rounded-full font-bold uppercase tracking-wider ${pet.status === 'adopted' ? 'bg-gray-100 text-gray-800' : 'bg-green-100 text-green-800'}`}>
                                                             {pet.status || 'available'}
                                                         </span>
-                                                        <Button onClick={() => handleEditPet(pet)} variant="outline" size="sm" className="font-semibold shadow-sm hover:bg-primary hover:text-white transition-colors">
+                                                        <Button
+                                                            onClick={() => handleEditPet(pet)}
+                                                            variant="outline" size="sm"
+                                                            className="font-semibold shadow-sm hover:bg-primary hover:text-white transition-colors"
+                                                            disabled={user?.verification_status !== 'verified'}
+                                                        >
                                                             Edit Profile
                                                         </Button>
                                                     </div>
@@ -455,7 +408,7 @@ export default function ShelterDashboardPage() {
                                             {pets.length === 0 && (
                                                 <div className="text-center py-12 border-2 border-dashed rounded-2xl bg-muted/20">
                                                     <div className="mb-4 text-muted-foreground font-medium">Your shelter's directory is empty.</div>
-                                                    <Button asChild className="shadow-lg">
+                                                    <Button asChild className="shadow-lg" disabled={user?.verification_status !== 'verified'}>
                                                         <Link href="/shelters/add-pet">Add Your First Pet</Link>
                                                     </Button>
                                                 </div>
